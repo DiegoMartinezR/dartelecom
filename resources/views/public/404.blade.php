@@ -1,4 +1,9 @@
-@extends('components.public.matrix')
+@extends('components.public.matrix', ['pagina' => 'Página no encontrada'])
+
+@section('titulo', 'Página no encontrada')
+@section('meta_title', '404 - Página no encontrada | DarTelecom')
+@section('meta_description', 'La página que buscas no existe o ha sido movida.')
+@section('meta_robots', 'noindex, nofollow')
 
 @section('css_importados')
 

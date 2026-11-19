@@ -1,4 +1,7 @@
-@extends('components.public.matrix')
+@extends('components.public.matrix', ['pagina' => 'Proceso de Pago'])
+
+@section('titulo', 'Proceso de Pago')
+@section('meta_robots', 'noindex, nofollow')
 
 @push('head')
   <script src="https://static.micuentaweb.pe/static/js/krypton-client/V4.0/stable/kr-payment-form.min.js"

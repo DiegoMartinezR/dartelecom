@@ -89,17 +89,22 @@ class ProductsController extends Controller
            'destacado' => 'nullable|boolean',
            'visible' => 'nullable|boolean',
            'status' => 'nullable|boolean',
+           'meta_title' => 'nullable|string|max:255',
+           'meta_description' => 'nullable|string',
+           'meta_keywords' => 'nullable|string|max:255',
        ]);
    
        $data = $request->all();
        
-       // Verificar si ya existe un producto con el mismo nombre
-       $existingSlug = Products::where('slug', Str::slug($request->producto))->first();
-       if ($existingSlug) {
-           $data['slug'] = Str::slug($request->producto) . '-' . uniqid();
-       } else {
-           $data['slug'] = Str::slug($request->producto);
+       // Generar slug a partir del input slug o del nombre del producto
+       $baseSlug = $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->producto);
+       $slug = $baseSlug;
+       $counter = 1;
+       while (Products::where('slug', $slug)->exists()) {
+           $slug = $baseSlug . '-' . $counter;
+           $counter++;
        }
+       $data['slug'] = $slug;
    
        try {
            // **Paso 1: Crear la carpeta principal "Productos" si no existe**
@@ -197,6 +202,9 @@ class ProductsController extends Controller
            $producto->album = 'storage/images/albums/' . $mainFolder . '/' . $subFolder;
            $producto->imagen = $data['imagen'] ?? null;
            $producto->manuales = $data['manuales'] ?? null;
+           $producto->meta_title = $request->meta_title;
+           $producto->meta_description = $request->meta_description;
+           $producto->meta_keywords = $request->meta_keywords;
            $producto->save();
    
            // **Paso 8: Subir imágenes adicionales si existen**
@@ -273,6 +281,9 @@ class ProductsController extends Controller
           'precio_oferta' => 'nullable|numeric|min:0',
           'peso_empaque' => 'required|numeric|min:0',
           'tipo_vendedor' => 'nullable|string|min:0',
+          'meta_title' => 'nullable|string|max:255',
+          'meta_description' => 'nullable|string',
+          'meta_keywords' => 'nullable|string|max:255',
       ]);
   
       $producto = Products::findOrFail($id);
@@ -283,9 +294,25 @@ class ProductsController extends Controller
           // Procesar especificaciones JSON
           $especificaciones = json_decode($request->especificaciones_json, true);
   
+          // Procesar actualización de slug si se proporcionó uno nuevo
+          $oldSlug = $producto->slug;
+          $newSlug = $oldSlug;
+          if ($request->filled('slug')) {
+              $candidateSlug = Str::slug($request->slug);
+              if ($candidateSlug !== $oldSlug) {
+                  $newSlug = $candidateSlug;
+                  $counter = 1;
+                  while (Products::where('slug', $newSlug)->where('id', '!=', $producto->id)->exists()) {
+                      $newSlug = $candidateSlug . '-' . $counter;
+                      $counter++;
+                  }
+                  $this->updateAlbumAndFolder($oldSlug, $newSlug);
+              }
+          }
+
           // **Manejo de la carpeta y álbum**
           $mainFolder = 'Productos';
-          $subFolder = $producto->slug;
+          $subFolder = $newSlug;
           $pathSubFolder = public_path("storage/images/albums/{$mainFolder}/{$subFolder}");
   
           if (!is_dir($pathSubFolder)) {
@@ -358,8 +385,12 @@ class ProductsController extends Controller
               'brand_id' => $request->brand_id,
               'destacado' => $request->has('destacado'),
               'album' => "storage/images/albums/{$mainFolder}/{$subFolder}",
+              'slug' => $newSlug,
               'imagen' => $data['imagen'] ?? $producto->imagen,
               'manuales' => $data['manuales'] ?? $producto->manuales,
+              'meta_title' => $request->meta_title,
+              'meta_description' => $request->meta_description,
+              'meta_keywords' => $request->meta_keywords,
           ]);
   
           return redirect()->route('products.index')->with('success', 'Producto actualizado exitosamente.');

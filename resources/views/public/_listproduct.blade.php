@@ -1,7 +1,7 @@
 @foreach ($productos as $item)
     <div class="bg-colorBackgroundAzulClaro h-max p-4 shadow-md text-start group cursor-pointer rounded-xl">
         <div class="mb-4 w-full h-[92px] md:h-[212px] bg-white rounded-xl">
-            <img src="{{ asset($item->imagen) }}" alt="{{ $item->producto }}" class=" w-full h-full object-contain">
+            <img src="{{ asset($item->imagen) }}" alt="{{ $item->producto }}" loading="lazy" decoding="async" class=" w-full h-full object-contain">
         </div>
         <h3 class="text-text14 md:text-text28 font-semibold mb-2 text-colorAzulOscuro">{{ $item->producto }}</h3>
         <p class="text-colorParrafo mb-4 text-text10 md:text-text16 line-clamp-2">{{ $item->extract }}</p>

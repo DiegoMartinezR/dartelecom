@@ -1,2 +1,24 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Rutas de administración y autenticación
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# Carrito, Checkout y Área privada
+Disallow: /carrito
+Disallow: /pago
+Disallow: /agradecimiento
+Disallow: /micuenta/
+Disallow: /mi-cuenta/
+
+# Búsqueda y endpoints internos
+Disallow: /buscar
+Disallow: /servicios/show/
+Disallow: /404
+
+# Sitemap XML
+Sitemap: https://dartelecom.pe/sitemap.xml

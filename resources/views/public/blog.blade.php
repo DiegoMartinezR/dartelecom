@@ -1,5 +1,9 @@
-@extends('components.public.matrix', ['pagina' => 'blog'])
+@extends('components.public.matrix', ['pagina' => 'Blog'])
+
 @section('titulo', 'Blog')
+@section('meta_title', 'Blog de Telecomunicaciones e Internet | DarTelecom')
+@section('meta_description', 'Artículos, guías y novedades sobre infraestructura de telecomunicaciones, tecnologías de fibra óptica, radioenlaces y consejos para operadores ISP.')
+@section('meta_keywords', 'blog telecomunicaciones, articulos redes e internet, fibra optica tutoriales, guias wisp peru, dartelecom blog')
 @section('css_importados')
 
 @stop

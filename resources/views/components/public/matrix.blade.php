@@ -1,13 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="title" content="@yield('meta_title', 'Default Title')">
-    <meta name="description" content="@yield('meta_description', 'Default Description')">
-    <meta name="keywords" content="@yield('meta_keywords', 'default, keywords')">
-    <title>{{ ucwords(strtolower($pagina ?? 'Pagina')) }} | {{ config('app.name', 'Laravel') }}</title>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    {{-- Título SEO --}}
+    <title>@hasSection('meta_title')@yield('meta_title')@elseif(isset($pagina) && !empty($pagina)){{ ucwords(strtolower($pagina)) }} | {{ config('app.name', 'DarTelecom') }}@else{{ config('app.name', 'DarTelecom') }} | Equipos y Soluciones de Telecomunicaciones en Perú@endif</title>
+
+    {{-- Metadatos Principales --}}
+    <meta name="title" content="@yield('meta_title', 'DarTelecom | Equipos y Soluciones de Telecomunicaciones en Perú')">
+    <meta name="description" content="@yield('meta_description', 'DarTelecom: Especialistas en equipamiento para redes, fibra óptica, radioenlaces, torres, routers y asesoría técnica para operadores ISP en Perú.')">
+    <meta name="keywords" content="@yield('meta_keywords', 'telecomunicaciones peru, equipos de red, fibra optica, radioenlaces, torres ventadas, routers isp, dartelecom')">
+    <meta name="robots" content="@yield('meta_robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1')">
+
+    {{-- Enlace Canónico Dinámico --}}
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+
+    {{-- Open Graph / Facebook / WhatsApp --}}
+    <meta property="og:locale" content="es_PE">
+    <meta property="og:type" content="@yield('og_type', 'website')">
+    <meta property="og:title" content="@yield('meta_title', 'DarTelecom | Equipos y Soluciones de Telecomunicaciones')">
+    <meta property="og:description" content="@yield('meta_description', 'DarTelecom: Especialistas en equipamiento para redes, fibra óptica, radioenlaces y asesoría técnica para operadores ISP.')">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+    <meta property="og:site_name" content="DarTelecom">
+    <meta property="og:image" content="@yield('og_image', asset('images/img/logo.png'))">
+
+    {{-- Twitter Cards --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@yield('meta_title', 'DarTelecom')">
+    <meta name="twitter:description" content="@yield('meta_description', 'Soluciones integrales de telecomunicaciones en Perú.')">
+    <meta name="twitter:image" content="@yield('og_image', asset('images/img/logo.png'))">
+
+    {{-- Structured Data (Schema.org JSON-LD) --}}
+    @stack('structured_data')
 
 
 
@@ -27,7 +54,6 @@
 
 
     {{-- Modal Jquery --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-modal/0.9.1/jquery.modal.min.css" />

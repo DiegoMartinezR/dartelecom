@@ -1,5 +1,57 @@
-@extends('components.public.matrix', ['pagina' => 'Inicio'])
+@extends('components.public.matrix', ['pagina' => $general?->meta_title ?: 'Inicio'])
+
 @section('titulo', 'Inicio')
+@section('meta_title', $general?->meta_title ?: 'DarTelecom | Equipos de Red y Soluciones de Telecomunicaciones en Perú')
+@section('meta_description', $general?->meta_description ?: 'DarTelecom: Especialistas en infraestructura de red, antenas, radioenlaces, fibra óptica y equipamiento para operadores ISP en Perú. Cotiza con nosotros.')
+@section('meta_keywords', $general?->meta_keywords ?: 'dartelecom, telecomunicaciones peru, antenas isp, fibra optica, equipos de red, radioenlaces mikrotik, routers')
+@if($general?->meta_image)
+@section('og_image', asset($general->meta_image))
+@endif
+
+@push('structured_data')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "{{ url('/') }}/#organization",
+      "name": "DarTelecom",
+      "url": "{{ url('/') }}",
+      "logo": "{{ asset('images/img/logo.png') }}",
+      "image": "{{ asset('images/img/logo.png') }}",
+      "description": "Especialistas en equipamiento de telecomunicaciones, antenas, radioenlaces, fibra óptica y soporte para operadores ISP en Perú.",
+      "telephone": "+51 908931873",
+      "email": "ventas@dartelecom.pe",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Av. Francisco Lazo 1777",
+        "addressLocality": "Lince",
+        "addressRegion": "Lima",
+        "addressCountry": "PE"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+51 908931873",
+        "contactType": "sales",
+        "areaServed": "PE",
+        "availableLanguage": "Spanish"
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "{{ url('/') }}/#website",
+      "url": "{{ url('/') }}",
+      "name": "DarTelecom",
+      "publisher": {
+        "@id": "{{ url('/') }}/#organization"
+      },
+      "inLanguage": "es-PE"
+    }
+  ]
+}
+</script>
+@endpush
 @section('css_importados')
 
 <style>

@@ -103,8 +103,22 @@ class GeneralController extends Controller
 
 
 
+    // Manejo de imagen SEO para el Home
+    if ($request->hasFile("meta_image")) {
+      $file = $request->file('meta_image');
+      $nombreImagen = 'og_home_' . time() . '.' . $file->getClientOriginalExtension();
+      $ruta = 'storage/images/seo/';
+
+      if (!file_exists(public_path($ruta))) {
+        mkdir(public_path($ruta), 0777, true);
+      }
+
+      $file->move(public_path($ruta), $nombreImagen);
+      $general->meta_image = $ruta . $nombreImagen;
+    }
+
     // Actualizar los campos del registro con los datos del formulario
-    $general->update($request->all());
+    $general->update($request->except('meta_image'));
 
     $this->actualizarEspecificacion($detalleContacto);
     // Guardar 

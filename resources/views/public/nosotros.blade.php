@@ -1,5 +1,9 @@
 @extends('components.public.matrix', ['pagina' => 'Nosotros'])
+
 @section('titulo', 'Nosotros')
+@section('meta_title', 'Sobre Nosotros | DarTelecom - Expertos en Telecomunicaciones')
+@section('meta_description', 'Conoce la trayectoria de DarTelecom: líderes en proveer soluciones de conectividad, equipamiento de telecomunicaciones y soporte a ISPs en todo el Perú.')
+@section('meta_keywords', 'sobre nosotros dartelecom, historia dartelecom, empresa telecomunicaciones lima peru, proveedores isp')
 @section('css_importados')
 
 @stop

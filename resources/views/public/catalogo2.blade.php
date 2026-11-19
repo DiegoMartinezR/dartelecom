@@ -1,4 +1,9 @@
-@extends('components.public.matrix')
+@extends('components.public.matrix', ['pagina' => 'Catálogo de Equipos'])
+
+@section('titulo', 'Catálogo de Equipos')
+@section('meta_title', 'Catálogo de Equipos y Soluciones de Telecomunicaciones | DarTelecom')
+@section('meta_description', 'Explora nuestro catálogo de antenas, radioenlaces, fibra óptica, routers, switches y accesorios de red para operadores de telecomunicaciones e ISPs en Perú.')
+@section('meta_keywords', 'catalogo equipos telecomunicaciones, antenas radioenlace, fibra optica equipos, routers mikrotik peru, switches dartelecom')
 
 @section('css_importados')
     <style>

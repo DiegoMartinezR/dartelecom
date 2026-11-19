@@ -33,6 +33,25 @@
                                         </div>
                                     </div>
 
+                                    <!-- URL Amigable (Slug) -->
+                                    <div class="md:col-span-5 mt-2">
+                                        <label for="slug" class="block font-medium text-gray-700 dark:text-gray-300">
+                                            URL Amigable (Slug) <span class="text-xs text-gray-400 font-normal">(Opcional: si se deja vacío se genera automáticamente del nombre)</span>
+                                        </label>
+                                        <div class="relative mb-2 mt-1">
+                                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                                                <i class="fa-solid fa-link"></i>
+                                            </div>
+                                            <input type="text" id="slug" name="slug" value="{{ old('slug') }}"
+                                                class="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                                                placeholder="ejemplo-mi-producto-personalizado">
+                                            @error('slug')
+                                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                                            @enderror
+                                        </div>
+                                        <p class="text-xs text-gray-500">Ejemplo de enlace resultante: <code class="text-blue-600 font-semibold">https://dartelecom.pe/producto/<b>tu-slug</b></code></p>
+                                    </div>
+
                                     <!-- Descripción Corta -->
                                     <div class="md:col-span-5 mt-2">
                                         <label for="extract">Descripción Breve</label>
@@ -84,6 +103,56 @@
                                                 class="p-2.5 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50">
                                             <p class="mt-1 text-sm text-gray-500">Documento PDF con especificaciones
                                                 técnicas</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Sección SEO Técnico -->
+                                    <div class="md:col-span-5 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <i class="fa-solid fa-chart-line text-blue-600"></i>
+                                            <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-base">
+                                                Optimización SEO (Metadatos)
+                                            </h3>
+                                        </div>
+
+                                        <!-- Meta Title -->
+                                        <div class="mb-3">
+                                            <label for="meta_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Meta Título (SEO Title)
+                                            </label>
+                                            <div class="relative mt-1">
+                                                <input type="text" id="meta_title" name="meta_title" value="{{ old('meta_title') }}"
+                                                    maxlength="255"
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                    placeholder="Ej: Antena RF Dual Band 5GHz | DarTelecom">
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-500">Recomendado: 50 a 60 caracteres.</p>
+                                        </div>
+
+                                        <!-- Meta Description -->
+                                        <div class="mb-3">
+                                            <label for="meta_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Meta Descripción (Snippet de Google)
+                                            </label>
+                                            <div class="relative mt-1">
+                                                <textarea id="meta_description" name="meta_description" rows="3"
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                    placeholder="Breve resumen persuasivo del producto para los resultados de búsqueda...">{{ old('meta_description') }}</textarea>
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-500">Recomendado: 120 a 160 caracteres.</p>
+                                        </div>
+
+                                        <!-- Meta Keywords -->
+                                        <div class="mb-3">
+                                            <label for="meta_keywords" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                                Palabras Clave (Keywords separadas por comas)
+                                            </label>
+                                            <div class="relative mt-1">
+                                                <input type="text" id="meta_keywords" name="meta_keywords" value="{{ old('meta_keywords') }}"
+                                                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                    placeholder="telecomunicaciones, antenas isp, fibra optica, mikrotik">
+                                            </div>
+                                            <p class="mt-1 text-xs text-gray-500">Términos relevantes separados por comas.</p>
                                         </div>
                                     </div>
                                 </div>

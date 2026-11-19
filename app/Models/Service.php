@@ -17,6 +17,10 @@ class Service extends Model
         'descripcion_breve', 
         'descripcion_extensa', 
         'imagen_principal',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+        'meta_image',
         'visible'
     ];
 

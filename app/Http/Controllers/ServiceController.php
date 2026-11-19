@@ -58,13 +58,19 @@ class ServiceController extends Controller
             'descripcion_extensa' => 'nullable|string',
             'imagen_principal' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         try {
-            // Generar slug único
-            $slug = Str::slug($request->title);
+            // Generar slug a partir del input o del título
+            $baseSlug = $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->title);
+            $slug = $baseSlug;
+            $counter = 1;
             while (Service::where('slug', $slug)->exists()) {
-                $slug = Str::slug($request->title) . '-' . uniqid();
+                $slug = $baseSlug . '-' . $counter;
+                $counter++;
             }
 
             // Crear la carpeta principal "Servicios" si no existe
@@ -99,6 +105,29 @@ class ServiceController extends Controller
             $service->subtitle = $request->subtitle;
             $service->descripcion_breve = $request->descripcion_breve;
             $service->descripcion_extensa = $request->descripcion_extensa;
+            $service->meta_title = $request->meta_title;
+            $service->meta_description = $request->meta_description;
+            $service->meta_keywords = $request->meta_keywords;
+
+        // Actualizar slug si se especificó uno nuevo
+        if ($request->filled('slug')) {
+            $candidateSlug = Str::slug($request->slug);
+            if ($candidateSlug !== $service->slug) {
+                $newSlug = $candidateSlug;
+                $counter = 1;
+                while (Service::where('slug', $newSlug)->where('id', '!=', $service->id)->exists()) {
+                    $newSlug = $candidateSlug . '-' . $counter;
+                    $counter++;
+                }
+                $oldSlug = $service->slug;
+                $service->slug = $newSlug;
+                $album = Album::where('name', $oldSlug)->first();
+                if ($album) {
+                    $album->name = $newSlug;
+                    $album->save();
+                }
+            }
+        }
 
 
             // Guardar el icono
@@ -127,6 +156,20 @@ class ServiceController extends Controller
 
                 $file->move(public_path($ruta), $nombreImagen);
                 $service->imagen_principal = $ruta . $nombreImagen;
+            }
+
+            // Guardar la imagen de metadatos SEO
+            if ($request->hasFile("meta_image")) {
+                $file = $request->file('meta_image');
+                $nombreImagen = Str::random(10) . '_' . $file->getClientOriginalName();
+                $ruta = 'storage/images/servicios/seo/';
+
+                if (!file_exists(public_path($ruta))) {
+                    mkdir(public_path($ruta), 0777, true);
+                }
+
+                $file->move(public_path($ruta), $nombreImagen);
+                $service->meta_image = $ruta . $nombreImagen;
             }
 
             $service->save();
@@ -178,6 +221,9 @@ class ServiceController extends Controller
             'descripcion_extensa' => 'nullable|string',
             'icono' => 'nullable|file|mimes:svg',
             'imagen_principal' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         $service = Service::findOrfail($id);
@@ -185,6 +231,29 @@ class ServiceController extends Controller
         $service->subtitle = $request->subtitle;
         $service->descripcion_breve = $request->descripcion_breve;
         $service->descripcion_extensa = $request->descripcion_extensa;
+        $service->meta_title = $request->meta_title;
+        $service->meta_description = $request->meta_description;
+        $service->meta_keywords = $request->meta_keywords;
+
+        // Actualizar slug si se especificó uno nuevo
+        if ($request->filled('slug')) {
+            $candidateSlug = Str::slug($request->slug);
+            if ($candidateSlug !== $service->slug) {
+                $newSlug = $candidateSlug;
+                $counter = 1;
+                while (Service::where('slug', $newSlug)->where('id', '!=', $service->id)->exists()) {
+                    $newSlug = $candidateSlug . '-' . $counter;
+                    $counter++;
+                }
+                $oldSlug = $service->slug;
+                $service->slug = $newSlug;
+                $album = Album::where('name', $oldSlug)->first();
+                if ($album) {
+                    $album->name = $newSlug;
+                    $album->save();
+                }
+            }
+        }
 
 
         // Si el usuario sube un nuevo icono
@@ -227,6 +296,24 @@ class ServiceController extends Controller
 
             // Actualiza el campo imagen_principal con la nueva ruta
             $service->imagen_principal = $ruta . $nombreImagen;
+        }
+
+        // Si el usuario sube una nueva imagen de metadatos SEO
+        if ($request->hasFile("meta_image")) {
+            if ($service->meta_image && File::exists(public_path($service->meta_image))) {
+                File::delete(public_path($service->meta_image));
+            }
+
+            $file = $request->file('meta_image');
+            $nombreImagen = Str::random(10) . '_' . $file->getClientOriginalName();
+            $ruta = 'storage/images/servicios/seo/';
+
+            if (!file_exists(public_path($ruta))) {
+                mkdir(public_path($ruta), 0777, true);
+            }
+
+            $file->move(public_path($ruta), $nombreImagen);
+            $service->meta_image = $ruta . $nombreImagen;
         }
 
         $service->update();

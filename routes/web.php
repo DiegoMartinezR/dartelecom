@@ -44,6 +44,7 @@ use App\Http\Controllers\MisClientesController;
 use App\Http\Controllers\MisMarcasController;
 use App\Http\Controllers\NewsletterSubscriberController;
 use App\Http\Controllers\NosotrosViewController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\PedidosController;
 use App\Http\Controllers\PolyticsConditionController;
 use App\Http\Controllers\PriceController;
@@ -79,6 +80,7 @@ use App\Models\Template;
 /* Las rutas publicas */
 
 Route::get('/', [IndexController::class, 'index'])->name('index');
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/nosotros', [IndexController::class, 'nosotros'])->name('nosotros');
 Route::get('/innovaciones', [IndexController::class, 'innovaciones'])->name('innovaciones');
 Route::get('/servicios/{slug?}', [IndexController::class, 'servicios'])->name('servicios');
@@ -90,7 +92,7 @@ Route::post('/comentario/nuevo', [IndexController::class, 'hacerComentario'])->n
 Route::get('/contacto', [IndexController::class, 'contacto'])->name('contacto');
 Route::get('/descargables/{filtro}', [IndexController::class, 'catalogosDescargables'])->name('descargables');
 Route::get('/blog', [IndexController::class, 'blog'])->name('blog.all');
-Route::get('/blog/{filtro}', [IndexController::class, 'blog'])->name('blog');
+Route::get('/blog/{filtro?}', [IndexController::class, 'blog'])->name('blog');
 Route::get('/post/{slug}', [IndexController::class, 'detalleBlog'])->name('detalleBlog');
 //probando alpine js
 Route::get('/imagenes', [IndexController::class, 'imagenes'])->name('imagenes');
@@ -109,7 +111,7 @@ Route::post('/agradecimiento', [IndexController::class, 'agradecimiento'])->name
 /* Catálogo y producto */
 Route::get('/producto/{slug}', [IndexController::class, 'productoShow'])->name('producto');
 Route::get('/catalogo', [IndexController::class, 'catalogo'])->name('catalogo.all');
-//Route::get('/catalogo/{filtro}', [IndexController::class, 'catalogo'])->name('catalogo');
+Route::get('/catalogo/{filtro?}', [IndexController::class, 'catalogo'])->name('catalogo');
 // Ruta para manejar el filtrado por AJAX
 Route::post('/filter-products', [IndexController::class, 'filterProducts'])->name('filter.products');
 
@@ -168,8 +170,10 @@ Route::middleware(['auth:sanctum', 'verified', 'can:Admin'])->group(function () 
         Route::resource('/terminos-y-condiciones', TermsAndConditionController::class);
 
 
-        //Datos Generales
+        //Datos Generales y SEO
         Route::resource('/datosgenerales', GeneralController::class);
+        Route::post('/seo/sitemap/regenerate', [SitemapController::class, 'generateFile'])->name('seo.sitemap.regenerate');
+        Route::post('/seo/robots/update', [SitemapController::class, 'updateRobots'])->name('seo.robots.update');
         Route::resource('/homeview', HomeViewController::class); #using
         Route::resource('/contactoview', ContactoViewController::class); #using
         Route::resource('/nosotrosview', NosotrosViewController::class); #using

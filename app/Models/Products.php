@@ -45,6 +45,11 @@ class Products extends Model
 
         'brand_id',
 
+        // Metadatos SEO
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
+
         'visible',
         'status'
     ];

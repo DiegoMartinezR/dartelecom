@@ -1,4 +1,7 @@
-@extends('components.public.matrix')
+@extends('components.public.matrix', ['pagina' => 'Mi Cuenta'])
+
+@section('titulo', 'Mi Cuenta')
+@section('meta_robots', 'noindex, nofollow')
 
 @section('css_importados')
 

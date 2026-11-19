@@ -1,5 +1,70 @@
-@extends('components.public.matrix', ['pagina' => 'index'])
-@section('titulo', 'Inicio')
+@php
+    $servicioActual = $servicioParaHeader ?? null;
+    $tituloLimpio = trim(preg_replace('/\s+/', ' ', str_replace(['*', '/'], ['', ' '], $servicioActual?->title ?? 'Servicios')));
+    $metaTitulo = $servicioActual?->meta_title ?: ($tituloLimpio ? $tituloLimpio . ' | DarTelecom' : 'Servicios de Telecomunicaciones | DarTelecom');
+    $metaDesc = $servicioActual?->meta_description ?: ($servicioActual?->descripcion_breve ? Str::limit(strip_tags($servicioActual->descripcion_breve), 155) : 'Soluciones integrales y servicios de telecomunicaciones para operadores ISP y empresas en Perú.');
+    $metaKeywords = $servicioActual?->meta_keywords ?: null;
+@endphp
+@extends('components.public.matrix', ['pagina' => $servicioActual?->meta_title ?: ($tituloLimpio ?: 'Servicios')])
+
+@section('titulo', $tituloLimpio ?: 'Servicios')
+@section('meta_title', $metaTitulo)
+@section('meta_description', $metaDesc)
+@if(!empty($metaKeywords))
+@section('meta_keywords', $metaKeywords)
+@endif
+@if(!empty($servicioActual?->meta_image))
+@section('og_image', asset($servicioActual->meta_image))
+@endif
+
+@push('structured_data')
+@if($servicioActual)
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Service",
+  "name": "{{ addslashes($tituloLimpio) }}",
+  "description": "{{ addslashes(Str::limit(strip_tags($servicioActual->descripcion_breve ?? $tituloLimpio), 200)) }}",
+  "provider": {
+    "@type": "Organization",
+    "name": "DarTelecom",
+    "url": "{{ url('/') }}"
+  },
+  "areaServed": {
+    "@type": "Country",
+    "name": "Perú"
+  },
+  "url": "{{ route('servicios', $servicioActual->slug) }}"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": "{{ url('/') }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Servicios",
+      "item": "{{ route('servicios') }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ addslashes($tituloLimpio) }}",
+      "item": "{{ route('servicios', $servicioActual->slug) }}"
+    }
+  ]
+}
+</script>
+@endif
+@endpush
 @section('css_importados')
 
     <style>
@@ -347,49 +412,156 @@
 @section('content')
     <main class="bg-white">
 
-        <!-- Header Section -->
-        <div class="hidden h-[200px] w-full bg-cover bg-colorBackgroundAzulOscuro lg:flex flex-col justify-center"
-            style="background-image: linear-gradient(to right, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0)), url('{{ asset($servicioParaHeader?->imagen_principal ?? $servicioPage?->imagen) }}'); background-position: center center; background-size: cover; background-attachment: fixed;">
-        </div>
-
-        <section class="relative w-full "> <!-- Subheader -->
-            <!--<div class="absolute left-0  top-0 transform rotate-180 ">
-                <img src="{{ asset('images/img/background/bg-testimonio.png') }}" alt="" class="w-20 md:w-36 lg:w-40">
+        <!-- HERO SECTION: Estilo de Alta Fidelidad replicando el diseño visual de DarTelecom -->
+        <section class="relative w-full bg-[#07132B] overflow-hidden pt-28 sm:pt-32 lg:pt-36 pb-14 sm:pb-16 lg:pb-20 min-h-[650px] flex flex-col justify-center" style="min-height: 650px;">
+            
+            <!-- Imagen Fotográfica en la Mitad Derecha con Fusión Degradada -->
+            <div class="absolute inset-y-0 right-0 w-full lg:w-[58%] xl:w-[52%] h-full z-0 pointer-events-none select-none">
+                <!-- Imagen del Servicio -->
+                <img src="{{ !empty($servicioParaHeader?->imagen_principal) ? asset($servicioParaHeader->imagen_principal) : asset($servicioPage?->imagen ?? 'images/img/background/bg-contacto-torre.png') }}"
+                     alt="{{ $servicioParaHeader?->title ?? 'Servicio DarTelecom' }}"
+                     class="w-full h-full object-cover object-center lg:object-[center_right] opacity-75 lg:opacity-95" />
+                
+                <!-- Degradado de Fusión Suave Horizontal (De azul marino a transparente) -->
+                <div class="hidden lg:block absolute inset-y-0 left-0 w-2/5 bg-gradient-to-r from-[#07132B] via-[#07132B]/80 to-transparent"></div>
+                
+                <!-- Degradado para Móvil (Oscurecimiento general para lectura impecable) -->
+                <div class="lg:hidden absolute inset-0 bg-gradient-to-t from-[#07132B] via-[#07132B]/85 to-[#07132B]/60"></div>
+                
+                <!-- Degradado Superior para integración con Navbar -->
+                <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#07132B]/90 to-transparent"></div>
             </div>
-            <div class="absolute right-0  bottom-0 transform  ">
-                <img src="{{ asset('images/img/background/bg-testimonio.png') }}" alt=""
-                    class="w-20 md:w-36 lg:w-40">
-            </div>-->
-            <div class="bg-colorBackgroundAzulClaro pb-6">
-                <section class="w-11/12 text-center px-4 lg:max-w-3xl mx-auto mt-20 lg:mt-0">
-                <div class=" bg-opacity-50 flex items-center justify-center">
-                    <h1 class="text-colorAzulOscuro pt-8 text-text40 lg:text-text48 font-bold mb-2" data-aos="fade-up"
-                        data-aos-offset="150" data-aos-duration="1000" data-aos-delay="200">
-                        <x-custom.texto-titulo :text="$servicioParaHeader?->title ?? $servicioPage?->titulo" style="text-colorRojo" />
+
+            <!-- Franja o Textura Curva Roja (Delante de la imagen en la esquina inferior derecha) -->
+            <div class="absolute -bottom-1 right-0 pointer-events-none z-10 w-[220px] sm:w-[300px] md:w-[380px] lg:w-[460px] xl:w-[520px] overflow-hidden">
+                <svg viewBox="0 0 520 420" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto block transform translate-x-1 translate-y-1">
+                    <defs>
+                        <linearGradient id="redGradientSwoop" x1="140" y1="420" x2="520" y2="130" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#C8102E" />
+                            <stop offset="40%" stop-color="#ED1B2F" />
+                            <stop offset="100%" stop-color="#FF384D" />
+                        </linearGradient>
+                        <filter id="glowSwoop" x="-20%" y="-20%" width="140%" height="140%">
+                            <feDropShadow dx="-4" dy="-4" stdDeviation="12" flood-color="#ED1B2F" flood-opacity="0.35"/>
+                        </filter>
+                    </defs>
+                    <!-- Curva roja distintiva de la marca DarTelecom -->
+                    <path d="M 140 420 C 280 390, 420 280, 520 130 L 520 420 Z" 
+                          fill="url(#redGradientSwoop)" 
+                          filter="url(#glowSwoop)" />
+                    <!-- Línea de borde luminosa interna para acabado premium -->
+                    <path d="M 140 420 C 280 390, 420 280, 520 130" 
+                          stroke="rgba(255, 255, 255, 0.45)" 
+                          stroke-width="2.5" 
+                          stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <!-- Contenido Principal (Columna Izquierda con Tipografía de Alto Impacto) -->
+            <div class="w-11/12 lg:max-w-7xl mx-auto px-4 sm:px-6 relative z-20">
+                <div class="w-full lg:w-[60%] xl:w-[55%] flex flex-col items-start justify-center text-left"
+                     data-aos="fade-up" data-aos-duration="900" data-aos-offset="100">
+                    
+                    <!-- 1. Breadcrumb con Icono de Inicio -->
+                    <nav class="flex items-center gap-2 text-xs sm:text-sm text-slate-300 font-medium mb-5 sm:mb-6" aria-label="Ruta de navegación">
+                        <a href="{{ url('/') }}" class="hover:text-white transition-colors flex items-center gap-1.5" title="Inicio">
+                            <svg class="w-3.5 h-3.5 text-slate-300" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                            </svg>
+                        </a>
+                        <a href="{{ route('servicios') }}" class="hover:text-white transition-colors">Servicios</a>
+                        <span class="text-slate-500 font-semibold">&gt;</span>
+                        <span class="text-[#ED1B2F] font-bold">{{ $tituloLimpio ?: 'Servicio' }}</span>
+                    </nav>
+
+                    <!-- 2. Badge Píldora (Subtítulo / Categoría) -->
+                    <div class="mb-4 sm:mb-5">
+                        <span class="inline-flex items-center px-4 py-1.5 rounded-full border border-white/90 text-white font-bold text-xs sm:text-sm tracking-wider uppercase bg-white/5 backdrop-blur-sm shadow-sm">
+                            {{ mb_strtoupper(trim(str_replace(['*', '/'], ['', ' '], $servicioParaHeader?->subtitle ?: ($servicioParaHeader?->title ?: 'Servicio Especializado')))) }}
+                        </span>
+                    </div>
+
+                    <!-- 3. Título Principal (H1) con Resaltado en Rojo y Salto de Línea Personalizado -->
+                    @php
+                        $tituloRaw = $servicioParaHeader?->title ?? $servicioPage?->titulo ?? 'Servicios de Telecomunicaciones';
+                        $hasCustomSyntax = (strpos($tituloRaw, '*') !== false) || (strpos($tituloRaw, '/') !== false);
+
+                        if ($hasCustomSyntax) {
+                            $escaped = e($tituloRaw);
+                            // 1. Reemplazar slashes con <br /> primero para evitar colisión con el cierre </span>
+                            $withBreaks = preg_replace('/\s*\/\s*/', '<br />', $escaped);
+                            // 2. Reemplazar texto entre *asteriscos* con el color rojo de DarTelecom
+                            $tituloHtml = preg_replace('/\*([^*]+)\*/', '<span class="text-[#ED1B2F] font-extrabold">$1</span>', $withBreaks);
+                        } else {
+                            if (preg_match('/\b(ISP)\b/i', $tituloRaw)) {
+                                $tituloHtml = preg_replace('/\b(ISP)\b/i', '<span class="text-[#ED1B2F] font-extrabold">$1</span>', e($tituloRaw));
+                            } else {
+                                $words = explode(' ', e($tituloRaw));
+                                if (count($words) > 1) {
+                                    $lastWord = array_pop($words);
+                                    $tituloHtml = implode(' ', $words) . ' <span class="text-[#ED1B2F] font-extrabold">' . $lastWord . '</span>';
+                                } else {
+                                    $tituloHtml = '<span class="text-[#ED1B2F] font-extrabold">' . e($tituloRaw) . '</span>';
+                                }
+                            }
+                        }
+                    @endphp
+                    <h1 class="text-white text-3xl sm:text-4xl md:text-5xl lg:text-[46px] xl:text-[52px] font-extrabold tracking-tight leading-[1.14] mb-5 sm:mb-6">
+                        {!! $tituloHtml !!}
                     </h1>
-                </div>
-                <h2 class="text-colorParrafo text-text20 lg:text-text24 font-semibold mb-6" data-aos="fade-up"
-                    data-aos-offset="150" data-aos-duration="1000" data-aos-delay="300">
-                    {{ $servicioParaHeader?->subtitle ?? $servicioPage?->subtitulo }}
-                </h2>
-             
-            </section>
-               
-                @if($servicioParaHeader?->descripcion_breve || $servicioParaHeader?->descripcion_extensa)
-                <div class="prose prose-base w-11/12 lg:max-w-7xl mx-auto px-4 text-colorParrafo  mb-8" data-aos="fade-up"
-                     data-aos-offset="150" data-aos-duration="1000" data-aos-delay="400">
-                    @if($servicioParaHeader?->descripcion_breve)
-                        <p class="text-text16 mb-4">{{ $servicioParaHeader->descripcion_breve }}</p>
-                    @endif
-                    @if($servicioParaHeader?->descripcion_extensa)
-                        <div class="text-text16">
-                            {!! $servicioParaHeader->descripcion_extensa !!}
-                        </div>
-                    @endif
-                </div>
-                @endif
-            </div>
 
+                    <!-- 4. Descripción Breve -->
+                    @if(!empty($servicioParaHeader?->descripcion_breve))
+                    <p class="text-slate-200 text-sm sm:text-base md:text-lg font-normal leading-relaxed max-w-xl text-balance mb-6 sm:mb-8">
+                        {{ $servicioParaHeader->descripcion_breve }}
+                    </p>
+                    @endif
+
+                    <!-- 5. Botones de Acción (Cotizar & Ver Soluciones) -->
+                    <div class="flex flex-wrap items-center gap-3 sm:gap-4">
+                        <x-custom.button-cotizar :general="$general" text="COTIZAR SERVICIO" style="bg-[#ED1B2F] hover:bg-[#d81326] text-white px-7 py-3.5 rounded-full font-bold shadow-lg shadow-red-600/30 hover:shadow-red-600/50 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 text-sm uppercase tracking-wide inline-flex items-center gap-2 cursor-pointer" />
+                        
+                        @if($servicios && $servicios->count() > 0)
+                        <a href="#subservicios-seccion" class="inline-flex items-center gap-2 border border-white/40 hover:border-white text-white font-semibold text-sm px-6 py-3.5 rounded-full hover:bg-white/10 transition-all duration-200">
+                            <span>Ver especialidades</span>
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </a>
+                        @endif
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: Descripción Extensa del Servicio (Acerca de este servicio) -->
+        @if(!empty($servicioParaHeader?->descripcion_extensa))
+        <section class="w-full bg-[#F8FAFC] border-b border-slate-200/80 py-10 lg:py-14 relative z-10">
+            <div class="w-11/12 lg:max-w-7xl mx-auto px-4">
+                <div class="bg-white border border-slate-200/90 rounded-2xl p-6 sm:p-8 lg:p-10 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] relative overflow-hidden"
+                     data-aos="fade-up" data-aos-duration="800">
+                    <!-- Barra de acento roja vertical -->
+                    <div class="absolute top-0 left-0 w-2 h-full bg-[#ED1B2F]"></div>
+                    
+                    <div class="flex items-center gap-3 mb-4">
+                        <span class="w-8 h-8 rounded-lg bg-red-50 text-[#ED1B2F] flex items-center justify-center font-bold text-sm">
+                            <i class="fa-solid fa-list-check"></i>
+                        </span>
+                        <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#ED1B2F]">
+                            Detalles y Alcance del Servicio
+                        </h2>
+                    </div>
+
+                    <div class="prose prose-slate max-w-none text-slate-700 text-sm sm:text-base leading-relaxed">
+                        {!! $servicioParaHeader->descripcion_extensa !!}
+                    </div>
+                </div>
+            </div>
+        </section>
+        @endif
+
+        <section id="subservicios-seccion" class="relative w-full bg-white">
             @if($servicios && $servicios->count() > 0)
             <div class="w-11/12 lg:max-w-7xl mx-auto px-4 flex flex-col lg:flex-row gap-8 pt-8">
                 <!-- Sidebar -->
@@ -407,7 +579,7 @@
                                     <div class="hidden group-hover:inline-block h-7 w-7 bg-white {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? '!inline-block' : '' }}"
                                         style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
                                     </div>
-                                    <a href="#" class="servicio-link">{{ $servicioItem->title }}</a>
+                                    <a href="#" class="servicio-link">{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title)) }}</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -427,7 +599,7 @@
                                                 <div class="hidden group-hover:inline-block h-6 w-6 bg-white {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? '!inline-block' : '' }}"
                                                     style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
                                                 </div>
-                                                <a href="#" class="servicio-link text-sm">{{ $servicioItem->title }}</a>
+                                                <a href="#" class="servicio-link text-sm">{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title)) }}</a>
                                             </li>
                                         </div>
                                     @endforeach

@@ -135,15 +135,15 @@ class IndexController extends Controller
   {
     $servicioPage = ServiceView::first();
     $general = General::first();
-    
+
     // Determinar el servicio padre
     $servicioParaHeader = null;
     $subservicioSeleccionado = null;
-    
+
     if ($slug) {
       // Si viene un slug, puede ser de un servicio o subservicio
       $servicioParaHeader = Service::where('visible', 1)->where('slug', $slug)->first();
-      
+
       if (!$servicioParaHeader) {
         // Si no es un servicio, buscar si es un subservicio
         $subservicioTemp = SubService::where('visible', 1)->where('slug', $slug)->with('service')->first();
@@ -153,57 +153,57 @@ class IndexController extends Controller
         }
       }
     }
-    
+
     // Si no se encontró servicio, usar el primero disponible
     if (!$servicioParaHeader) {
       $servicioParaHeader = Service::where('visible', 1)->first();
     }
-    
+
     if (!$servicioParaHeader) {
       return redirect()->route('index')->with('error', 'No hay servicios disponibles.');
     }
-    
+
     // Obtener los subservicios del servicio específico
     $subservicios = SubService::where('visible', 1)
-                              ->where('service_id', $servicioParaHeader->id)
-                              ->get();
-    
+      ->where('service_id', $servicioParaHeader->id)
+      ->get();
+
     // Obtener el subservicio a mostrar
     $subservicio = null;
     if ($subservicioSeleccionado) {
       $subservicio = $subservicios->where('slug', $subservicioSeleccionado)->first();
     }
-    
+
     if (!$subservicio) {
       $subservicio = $subservicios->first();
       if ($subservicio) {
         $subservicioSeleccionado = $subservicio->slug;
       }
     }
-    
+
     // Si no hay subservicios, pasar datos vacíos para mostrar solo el header del servicio
     if (!$subservicio) {
       $servicios = collect(); // Colección vacía
       $servicio = null;
       $servicioSeleccionado = null;
       $album = null;
-      
+
       return view('public.servicio', compact('servicios', 'servicio', 'servicioPage', 'general', 'album', 'servicioSeleccionado', 'servicioParaHeader'));
     }
-    
+
     // Obtener el álbum relacionado al subservicio
     $albumName = $subservicio->slug;
     $album = Album::where('name', $albumName)->withCount(['images', 'children'])->first();
-    
+
     if ($album) {
       $album->load('children', 'images');
     }
-    
+
     // Asignar variables con nombres compatibles con la vista
     $servicios = $subservicios;
     $servicio = $subservicio;
     $servicioSeleccionado = $subservicioSeleccionado;
-    
+
     return view('public.servicio', compact('servicios', 'servicio', 'servicioPage', 'general', 'album', 'servicioSeleccionado', 'servicioParaHeader'));
   }
 
@@ -219,7 +219,7 @@ class IndexController extends Controller
     if ($album) {
       $album->load('children', 'images');
     }
-    
+
     // Pasamos el subservicio como servicio para mantener compatibilidad con el componente
     return view('components.custom.component-servicio', ['servicio' => $subservicio, 'general' => $general, 'album' => $album]);
   }
@@ -671,8 +671,7 @@ class IndexController extends Controller
 
   public function error()
   {
-    //
-    return view('public.404');
+    return response()->view('public.404', [], 404);
   }
 
 
@@ -702,18 +701,27 @@ class IndexController extends Controller
   public function productoShow($slug)
   {
     $general = General::first();
-    $producto = Products::where('slug', '=', $slug)->with('category')->with('brand')->first();
+    $producto = Products::where('slug', '=', $slug)
+      ->with('category')
+      ->with('brand')
+      ->firstOrFail();
 
-    $productoRelacionado = Products::where('categoria_id', '=', $producto->categoria_id)->where('id', '!=', $producto->id)->latest()->take(3)->get();
+    $productoRelacionado = Products::where('categoria_id', '=', $producto->categoria_id)
+      ->where('id', '!=', $producto->id)
+      ->latest()
+      ->take(3)
+      ->get();
 
     // Extraer solo el nombre del producto desde la ruta en "album"
     $albumName = $producto->slug;
 
     // Buscar el álbum en la base de datos
     $album = Album::where('name', $albumName)->withCount('images', 'children')->first();
-    $album->load('children', 'images');
+    if ($album) {
+      $album->load('children', 'images');
+    }
 
-    return view('public.product', compact('producto', 'productoRelacionado', 'album', 'general')); //compact('')
+    return view('public.product', compact('producto', 'productoRelacionado', 'album', 'general'));
   }
 
   public function producto(string $id)
@@ -948,39 +956,203 @@ class IndexController extends Controller
   /**
    * Realizado para Dar Telecom
    */
+  /**
+   * Procesa y extrae datos técnicos del cliente (IP real, dispositivo, SO, navegador)
+   */
+  private function procesarDatosTecnicos(Request $request): array
+  {
+    $userAgent = $request->userAgent() ?? '';
+
+    // 1. IP Real (Soporte Cloudflare, Proxies y Balanceadores)
+    $ip = null;
+    $headersToCheck = [
+      'HTTP_CF_CONNECTING_IP',
+      'HTTP_TRUE_CLIENT_IP',
+      'HTTP_X_REAL_IP',
+      'HTTP_X_FORWARDED_FOR',
+      'HTTP_CLIENT_IP',
+      'CF-Connecting-IP',
+      'X-Forwarded-For',
+      'X-Real-IP',
+    ];
+    foreach ($headersToCheck as $header) {
+      $val = $request->server($header) ?? $request->header($header);
+      if ($val) {
+        $ipList = explode(',', $val);
+        $candidate = trim($ipList[0]);
+        if (filter_var($candidate, FILTER_VALIDATE_IP)) {
+          $ip = $candidate;
+          break;
+        }
+      }
+    }
+    if (!$ip) {
+      $ip = $request->ip() ?? ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+    }
+
+    // 2. Detección de Dispositivo a partir de User-Agent y dimensiones
+    $device = 'desktop';
+    $isMobile = preg_match('/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i', $userAgent);
+    $isTablet = preg_match('/android|ipad|playbook|silk/i', $userAgent) && !preg_match('/mobile/i', $userAgent);
+
+    if ($isMobile) {
+      $device = 'mobile';
+    } elseif ($isTablet) {
+      $device = 'tablet';
+    } elseif ($request->filled('dispositivo')) {
+      $device = strtolower($request->dispositivo);
+    } elseif ($request->filled('anchodispositivo')) {
+      $ancho = (int) $request->anchodispositivo;
+      if ($ancho > 0 && $ancho < 768) {
+        $device = 'mobile';
+      } elseif ($ancho >= 768 && $ancho <= 1024) {
+        $device = 'tablet';
+      }
+    }
+
+    // 3. Detección de Sistema Operativo
+    $os = 'Desconocido';
+    $osList = [
+      '/iphone/i'             => 'iOS (iPhone)',
+      '/ipad/i'               => 'iPadOS',
+      '/android/i'            => 'Android',
+      '/windows nt 10/i'      => 'Windows 10/11',
+      '/windows nt 6.3/i'     => 'Windows 8.1',
+      '/windows nt 6.2/i'     => 'Windows 8',
+      '/windows nt 6.1/i'     => 'Windows 7',
+      '/macintosh|mac os x/i' => 'macOS',
+      '/linux/i'              => 'Linux',
+      '/cros/i'               => 'Chrome OS',
+    ];
+    foreach ($osList as $regex => $value) {
+      if (preg_match($regex, $userAgent)) {
+        $os = $value;
+        break;
+      }
+    }
+
+    // 4. Detección de Navegador
+    $browser = 'Desconocido';
+    if (preg_match('/edg/i', $userAgent)) {
+      $browser = 'Microsoft Edge';
+    } elseif (preg_match('/opr|opera/i', $userAgent)) {
+      $browser = 'Opera';
+    } elseif (preg_match('/samsungbrowser/i', $userAgent)) {
+      $browser = 'Samsung Internet';
+    } elseif (preg_match('/chrome/i', $userAgent) && !preg_match('/edg/i', $userAgent)) {
+      $browser = 'Google Chrome';
+    } elseif (preg_match('/safari/i', $userAgent) && !preg_match('/chrome/i', $userAgent)) {
+      $browser = 'Safari';
+    } elseif (preg_match('/firefox/i', $userAgent)) {
+      $browser = 'Mozilla Firefox';
+    }
+
+    // 5. Consolidación de client_system
+    $clientSystem = $request->sistema;
+    if (empty($clientSystem) || $clientSystem === 'Sin data' || $clientSystem === 'Win32' || $clientSystem === 'Linux armv81') {
+      $clientSystem = "{$os} | {$browser}";
+    }
+
+    return [
+      'ip'               => $ip,
+      'device'           => $device,
+      'client_system'    => $clientSystem,
+      'client_width'     => $request->anchodispositivo ?? $request->client_width,
+      'client_height'    => $request->largodispositivo ?? $request->client_height,
+      'client_latitude'  => $request->latitud ?? $request->client_latitude,
+      'client_longitude' => $request->longitud ?? $request->client_longitude,
+      'source_ref'       => $request->llegade ?? null,
+    ];
+  }
+
   public function guardarContacto(Request $request)
   {
-
     $data = $request->all();
-    $data['full_name'] = $request->name . ' ' . $request->lastname;
+
+    // Soporte para campo unificado 'full_name' o separados 'name' y 'lastname'
+    if ($request->filled('full_name') && !$request->filled('name')) {
+      $parts = explode(' ', trim($request->full_name), 2);
+      $name = $parts[0] ?? $request->full_name;
+      $lastname = !empty($parts[1]) ? $parts[1] : $name;
+      $request->merge([
+        'name' => $name,
+        'lastname' => $lastname,
+      ]);
+      $data['name'] = $name;
+      $data['lastname'] = $lastname;
+    } else if ($request->filled('name')) {
+      $data['full_name'] = trim(($request->name ?? '') . ' ' . ($request->lastname ?? ''));
+      $request->merge(['full_name' => $data['full_name']]);
+    }
+
+    // Normalizar teléfono a 9 dígitos si viene con prefijo +51 o espacios
+    if ($request->filled('phone')) {
+      $cleanPhone = preg_replace('/[^0-9]/', '', (string)$request->phone);
+      if (str_starts_with($cleanPhone, '51') && strlen($cleanPhone) === 11) {
+        $cleanPhone = substr($cleanPhone, 2);
+      }
+      $request->merge(['phone' => $cleanPhone]);
+      $data['phone'] = $cleanPhone;
+    }
+
+    // Guardar cada campo en su columna correspondiente de la BD (sin concatenar)
+    $data['full_name'] = $request->full_name ?? null;
+    $data['company'] = $request->company ?? null;
+    $data['city'] = $request->city ?? null;
+    $data['service_product'] = $request->service_product ?? 'Comprar equipos';
+    $data['message'] = $request->message ?? '';
+    $data['source'] = $request->source ?? 'Formulario Web';
+    $data['comunication'] = $request->comunication ?? 'Formulario Web';
+
+    // Captura técnica avanzada de IP, dispositivo, navegador y sistema
+    $datosTecnicos = $this->procesarDatosTecnicos($request);
+    $data['ip'] = $datosTecnicos['ip'];
+    $data['device'] = $datosTecnicos['device'];
+    $data['client_system'] = $datosTecnicos['client_system'];
+    $data['client_width'] = $datosTecnicos['client_width'];
+    $data['client_height'] = $datosTecnicos['client_height'];
+    $data['client_latitude'] = $datosTecnicos['client_latitude'];
+    $data['client_longitude'] = $datosTecnicos['client_longitude'];
 
     try {
       $reglasValidacion = [
-        'name' => 'required|string|max:255',
-        'lastname' => 'required|string|max:255',
+        'full_name' => 'required|string|min:3|max:255',
+        'company' => 'required|string|min:2|max:255',
         'email' => 'required|email|max:255',
         'phone' => 'required|digits:9',
-        'message' => 'required|string|max:500',
+        'city' => 'required|string|max:255',
+        'message' => 'required|string|min:5|max:3000',
+        'service_product' => 'nullable|string|max:255',
       ];
 
       $mensajes = [
-        'name.required' => 'El campo nombre es obligatorio.',
-        'lastname.required' => 'El campo apellido es obligatorio.',
+        'full_name.required' => 'El campo nombres y apellidos es obligatorio.',
+        'full_name.min' => 'El nombre debe tener al menos :min caracteres.',
+        'company.required' => 'El campo empresa / razón social es obligatorio.',
+        'company.min' => 'La empresa debe tener al menos :min caracteres.',
         'email.required' => 'El campo correo electrónico es obligatorio.',
         'email.email' => 'El formato del correo electrónico no es válido.',
-        'email.max' => 'El campo correo electrónico no puede tener más de :max caracteres.',
+        'email.max' => 'El correo electrónico no puede tener más de :max caracteres.',
         'phone.required' => 'El campo teléfono es obligatorio.',
-        'phone.digits' => 'El teléfono debe tener exactamente 9 dígitos.',
+        'phone.digits' => 'El teléfono debe tener 9 dígitos.',
+        'city.required' => 'El campo ciudad / región es obligatorio.',
         'message.required' => 'El campo mensaje es obligatorio.',
+        'message.min' => 'El mensaje debe tener al menos :min caracteres.',
         'message.max' => 'El campo mensaje no puede tener más de :max caracteres.',
       ];
 
       $request->validate($reglasValidacion, $mensajes);
 
-      Message::create($data);
+      $saved = Message::create($data);
 
+      try {
+        $this->envioCorreoAdmin($saved);
+        $this->envioCorreoCliente($saved);
+      } catch (\Throwable $th) {
+        // Silenciar si SMTP no está configurado
+      }
 
-      return response()->json(['message' => 'Mensaje enviado con éxito', 'data' => $data]);
+      return response()->json(['message' => 'Mensaje enviado con éxito', 'data' => $saved]);
     } catch (ValidationException $e) {
       return response()->json(['message' => $e->validator->errors()], 400);
     } catch (\Exception $e) {
@@ -988,73 +1160,131 @@ class IndexController extends Controller
     }
   }
 
-
-
   public function guardarContactoWsp(Request $request)
   {
     $data = $request->all();
-    $data['full_name'] = $request->full_name;
-    $ipAddress = $request->ip();
-    $ancho = $request->client_width;
-    $latitud = $request->client_latitude;
-    $longitud = $request->client_longitude;
-    $sistema = $request->client_system;
+
+    // Soporte para full_name o name/lastname
+    if ($request->filled('full_name') && !$request->filled('name')) {
+      $parts = explode(' ', trim($request->full_name), 2);
+      $name = $parts[0] ?? $request->full_name;
+      $lastname = !empty($parts[1]) ? $parts[1] : $name;
+      $request->merge([
+        'name' => $name,
+        'lastname' => $lastname,
+      ]);
+      $data['name'] = $name;
+      $data['lastname'] = $lastname;
+    } else if ($request->filled('name')) {
+      $data['full_name'] = trim(($request->name ?? '') . ' ' . ($request->lastname ?? ''));
+      $request->merge(['full_name' => $data['full_name']]);
+    }
+    $data['full_name'] = $request->full_name ?? null;
+
+    // Normalizar teléfono a 9 dígitos si viene con prefijo +51 o espacios
+    if ($request->filled('phone')) {
+      $cleanPhone = preg_replace('/[^0-9]/', '', (string)$request->phone);
+      if (str_starts_with($cleanPhone, '51') && strlen($cleanPhone) === 11) {
+        $cleanPhone = substr($cleanPhone, 2);
+      }
+      $request->merge(['phone' => $cleanPhone]);
+      $data['phone'] = $cleanPhone;
+    }
 
     try {
       $reglasValidacion = [
-        'full_name' => 'required|string|max:255',
+        'full_name' => 'required|string|min:3|max:255',
+        'company' => 'required|string|min:2|max:255',
         'email' => 'required|email|max:255',
+        'phone' => 'required|digits:9',
+        'city' => 'required|string|max:255',
+        'message' => 'required|string|min:5|max:3000',
+        'service_product' => 'nullable|string|max:255',
       ];
+
       $mensajes = [
-        'full_name.required' => 'El campo nombre es obligatorio.',
+        'full_name.required' => 'El campo nombres y apellidos es obligatorio.',
+        'full_name.min' => 'El nombre debe tener al menos :min caracteres.',
+        'company.required' => 'El campo empresa / razón social es obligatorio.',
+        'company.min' => 'La empresa debe tener al menos :min caracteres.',
         'email.required' => 'El campo correo electrónico es obligatorio.',
         'email.email' => 'El formato del correo electrónico no es válido.',
-        'email.max' => 'El campo correo electrónico no puede tener más de :max caracteres.',
+        'email.max' => 'El correo electrónico no puede tener más de :max caracteres.',
+        'phone.required' => 'El campo teléfono es obligatorio.',
+        'phone.digits' => 'El teléfono debe tener 9 dígitos.',
+        'city.required' => 'El campo ciudad / región es obligatorio.',
+        'message.required' => 'El campo mensaje es obligatorio.',
+        'message.min' => 'El mensaje debe tener al menos :min caracteres.',
+        'message.max' => 'El campo mensaje no puede tener más de :max caracteres.',
       ];
+
       $request->validate($reglasValidacion, $mensajes);
 
+      // Asignar campos individuales
+      $data['company'] = $request->company;
+      $data['city'] = $request->city;
+      $data['service_product'] = $request->service_product ?? 'Comprar equipos';
+      $data['message'] = $request->message;
+      $data['source'] = 'WhatsApp';
+      $data['comunication'] = 'WhatsApp';
 
-      if (!is_null($ipAddress)) {
-        $data['ip'] = $ipAddress;
-      } else {
-        $data['ip'] = 'Sin data';
+      // Captura técnica avanzada de IP, dispositivo, navegador y sistema
+      $datosTecnicos = $this->procesarDatosTecnicos($request);
+      $data['ip'] = $datosTecnicos['ip'];
+      $data['device'] = $datosTecnicos['device'];
+      $data['client_system'] = $datosTecnicos['client_system'];
+      $data['client_width'] = $datosTecnicos['client_width'];
+      $data['client_height'] = $datosTecnicos['client_height'];
+      $data['client_latitude'] = $datosTecnicos['client_latitude'];
+      $data['client_longitude'] = $datosTecnicos['client_longitude'];
+
+      // Registrar en BD
+      $saved = null;
+      try {
+        $saved = Message::create($data);
+        try {
+          $this->envioCorreoAdmin($saved);
+        } catch (\Throwable $th) {
+          // Silenciar si SMTP no está configurado
+        }
+      } catch (\Throwable $th) {
+        \Log::error('Error al guardar contacto de WhatsApp en BD: ' . $th->getMessage());
       }
 
-      if (!is_null($latitud)) {
-        $data['client_latitude'] = $latitud;
-      } else {
-        $data['client_latitude'] = 'Sin data';
+      // Obtener WhatsApp configurado en Datos Generales del panel de admin
+      $whatsappNumber = '51908931873';
+      try {
+        $general = General::first();
+        if ($general && !empty($general->whatsapp)) {
+          $whatsappNumber = preg_replace('/[^0-9]/', '', $general->whatsapp);
+        }
+      } catch (\Throwable $th) {
+        // Fallback al número por defecto
       }
 
-      if (!is_null($longitud)) {
-        $data['client_longitude'] = $longitud;
-      } else {
-        $data['client_longitude'] = 'Sin data';
-      }
+      // Construir mensaje estructurado
+      $textoWsp = "👋 *Hola Dar Telecom*, deseo consultar sobre sus servicios:\n";
+      if (!empty($data['full_name'])) $textoWsp .= "\n👤 *Nombre:* " . $data['full_name'];
+      if (!empty($data['company'])) $textoWsp .= "\n🏢 *Empresa:* " . $data['company'];
+      if (!empty($data['email'])) $textoWsp .= "\n✉️ *Correo:* " . $data['email'];
+      if (!empty($data['phone'])) $textoWsp .= "\n📱 *Teléfono:* " . $data['phone'];
+      if (!empty($data['city'])) $textoWsp .= "\n📍 *Ciudad/Región:* " . $data['city'];
+      if (!empty($data['service_product'])) $textoWsp .= "\n🎯 *Interés:* " . $data['service_product'];
+      if (!empty($data['message'])) $textoWsp .= "\n💬 *Mensaje:* " . $data['message'];
 
-      if (!is_null($sistema)) {
-        $data['client_system'] = $sistema;
-      } else {
-        $data['client_system'] = 'Sin data';
-      }
+      $wspUrl = "https://api.whatsapp.com/send?phone=" . $whatsappNumber . "&text=" . urlencode($textoWsp);
 
-
-      if ($ancho >= 1 && $ancho <= 767) {
-        $data['device'] = 'mobile';
-      } elseif ($ancho >= 768 && $ancho <= 1024) {
-        $data['device'] = 'tablet';
-      } elseif ($ancho >= 1025) {
-        $data['device'] = 'desktop';
-      } elseif (is_null($ancho)) {
-        $data['device'] = 'Sin data';
-      }
-
-
-
-      $formlanding = Message::create($data);
-      return response()->json(['message' => 'Redirigiendo a Whatsapp']);
+      return response()->json([
+        'status' => 'success',
+        'whatsapp_url' => $wspUrl,
+        'whatsapp_number' => $whatsappNumber,
+        'message' => 'Redirigiendo a WhatsApp',
+        'data' => $saved
+      ]);
     } catch (ValidationException $e) {
       return response()->json(['message' => $e->validator->errors()], 400);
+    } catch (\Exception $e) {
+      return response()->json(['message' => 'Ocurrió un error inesperado al procesar el contacto para WhatsApp.'], 500);
     }
   }
 
@@ -1143,321 +1373,50 @@ class IndexController extends Controller
   private function envioCorreoAdmin($data)
   {
     $generales = General::first();
-    $emailadmin = $generales->email;
-    $appUrl = env('APP_URL');
-    $name = 'Administrador';
-    $mensaje = "Nueva solicitud de contacto - Redconex";
-    $mail = EmailConfig::config($name, $mensaje);
+    $emailadmin = ($generales && !empty($generales->email)) ? $generales->email : 'ventas@dartelecom.pe';
+    $appUrl = env('APP_URL', url('/'));
+
+    $clientName = is_array($data) ? ($data['full_name'] ?? 'Cliente') : ($data->full_name ?? 'Cliente');
+    $clientCompany = is_array($data) ? ($data['company'] ?? '') : ($data->company ?? '');
+    $subjectName = $clientCompany ? "{$clientName} ({$clientCompany})" : $clientName;
 
     try {
+      $mail = EmailConfig::config("DarTelecom", "Nueva Solicitud de {$subjectName}");
       $mail->addAddress($emailadmin);
-      $mail->Body = '<html lang="en">
-          <head>
-            <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Dimensión Lider</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-            <link
-              href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
-              rel="stylesheet"
-            />
-            <style>
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
-            </style>
-          </head>
-          <body>
-            <main>
-              <table
-                style="
-                  width: 600px;
-                  margin: 0 auto;
-                  text-align: center;
-                  background-image: url(' .
-        $appUrl .
-        '/mail/fondo.png);
-                  background-repeat: no-repeat;
-                  background-position: center;
-                  background-size: cover;
-                "
-              >
-                <thead>
-                  <tr>
-                    <th
-                      style="
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: center;
-                        align-items: center;
-                        margin-top: 40px;
-                        padding: 0 200px;
-                      "
-                    >
-                        <a href="' .
-        $appUrl .
-        '" target="_blank" style="text-align:center" ><img src="' .
-        $appUrl .
-        '/mail/logo.png" alt="hpi" /></a>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <p
-                        style="
-                          color: #ffffff;
-                          font-size: 40px;
-                          line-height: normal;
-                          font-family: Google Sans;
-                          font-weight: bold;
-                        "
-                      >
-                        ¡Gracias
-                        <span style="color: #ffffff">por escribirnos!</span>
-                      </p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      <p
-                        style="
-                          color: #ffffff;
-                          font-weight: 500;
-                          font-size: 18px;
-                          text-align: center;
-                          width: 500px;
-                          margin: 0 auto;
-                          padding: 20px 0 5px 0;
-                          font-family: Google Sans;
-                        "
-                      >
-                        <span style="display: block">Hola ' . $name . '</span>
-                      </p>
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>
-                      <p
-                        style="
-                          color: #ffffff;
-                          font-weight: 500;
-                          font-size: 18px;
-                          text-align: center;
-                          width: 500px;
-                          margin: 0 auto;
-                          padding: 0px 10px 5px 0px;
-                          font-family: Google Sans;
-                        "
-                      >
-                        Tienes una nueva solicitud de contacto.
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <a
-                         target="_blank"
-                        href="' .
-        $appUrl .
-        '"
-                        style="
-                          text-decoration: none;
-                          background-color: #E29720;
-                          color: #21149E;
-                          padding: 13px 20px;
-                          display: inline-flex;
-                          justify-content: center;
-                          border-radius: 32px;
-                          align-items: center;
-                          gap: 10px;
-                          font-weight: 600;
-                          font-family: Google Sans;
-                          font-size: 16px;
-                          margin-bottom: 350px;
-                        "
-                      >
-                        <span>Visita nuestra web</span>
-                      </a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </main>
-          </body>
-        </html>
-          ';
       $mail->isHTML(true);
+      $mail->Body = view('mail.contact_admin', [
+        'data' => is_array($data) ? $data : $data->toArray(),
+        'general' => $generales,
+        'appUrl' => $appUrl
+      ])->render();
       $mail->send();
     } catch (\Throwable $th) {
-      //throw $th;
+      \Log::error('Error al enviar correo de notificación al administrador: ' . $th->getMessage());
     }
   }
 
   private function envioCorreoCliente($data)
   {
+    $clientEmail = is_array($data) ? ($data['email'] ?? null) : ($data->email ?? null);
+    if (empty($clientEmail)) {
+      return;
+    }
 
-    $name = $data['full_name'];
-    $appUrl = env('APP_URL');
-    $mensaje = 'Gracias por comunicarte con Redconex';
-    $mail = EmailConfig::config($name, $mensaje);
-    // $baseUrl = 'https://' . $_SERVER['HTTP_HOST'] . '/mail';
-    // $baseUrllink = 'https://' . $_SERVER['HTTP_HOST'] . '/';
+    $generales = General::first();
+    $appUrl = env('APP_URL', url('/'));
 
     try {
-      $mail->addAddress($data['email']);
-      $mail->Body = '<html lang="en">
-          <head>
-            <meta charset="UTF-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Dimensión Lider</title>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-            <link
-              href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
-              rel="stylesheet"
-            />
-            <style>
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
-            </style>
-          </head>
-          <body>
-            <main>
-              <table
-                style="
-                  width: 600px;
-                  margin: 0 auto;
-                  text-align: center;
-                  background-image: url(' .
-        $appUrl .
-        '/mail/fondo.png);
-                  background-repeat: no-repeat;
-                  background-position: center;
-                  background-size: cover;
-                "
-              >
-                <thead>
-                  <tr>
-                    <th
-                      style="
-                        display: flex;
-                        flex-direction: row;
-                        justify-content: center;
-                        align-items: center;
-                        margin-top: 40px;
-                        padding: 0 200px;
-                      "
-                    >
-                        <a href="' .
-        $appUrl .
-        '" target="_blank" style="text-align:center" ><img src="' .
-        $appUrl .
-        '/mail/logo.png" alt="redconex" /></a>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <p
-                        style="
-                          color: #ffffff;
-                          font-size: 40px;
-                          line-height: normal;
-                          font-family: Google Sans;
-                          font-weight: bold;
-                        "
-                      >
-                        ¡Gracias
-                        <span style="color: #ffffff">por escribirnos!</span>
-                      </p>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      <p
-                        style="
-                          color: #ffffff;
-                          font-weight: 500;
-                          font-size: 18px;
-                          text-align: center;
-                          width: 500px;
-                          margin: 0 auto;
-                          padding: 20px 0 5px 0;
-                          font-family: Google Sans;
-                        "
-                      >
-                        <span style="display: block">Hola ' . $name . '</span>
-                      </p>
-                    </td>
-                  </tr>
-                  
-                  <tr>
-                    <td>
-                      <p
-                        style="
-                          color: #ffffff;
-                          font-weight: 500;
-                          font-size: 18px;
-                          text-align: center;
-                          width: 500px;
-                          margin: 0 auto;
-                          padding: 0px 10px 5px 0px;
-                          font-family: Google Sans;
-                        "
-                      >
-                        En breve estaremos comunicandonos contigo.
-                      </p>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <a
-                         target="_blank"
-                        href="' .
-        $appUrl .
-        '"
-                        style="
-                          text-decoration: none;
-                          background-color: #E29720;
-                          color: #21149E;
-                          padding: 13px 20px;
-                          display: inline-flex;
-                          justify-content: center;
-                          border-radius: 32px;
-                          align-items: center;
-                          gap: 10px;
-                          font-weight: 600;
-                          font-family: Google Sans;
-                          font-size: 16px;
-                          margin-bottom: 350px;
-                        "
-                      >
-                        <span>Visita nuestra web</span>
-                      </a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </main>
-          </body>
-        </html>
-          ';
+      $mail = EmailConfig::config("DarTelecom Perú", "Hemos recibido tu consulta");
+      $mail->addAddress($clientEmail);
       $mail->isHTML(true);
+      $mail->Body = view('mail.contact_client', [
+        'data' => is_array($data) ? $data : $data->toArray(),
+        'general' => $generales,
+        'appUrl' => $appUrl
+      ])->render();
       $mail->send();
     } catch (\Throwable $th) {
-      //throw $th;
+      \Log::error('Error al enviar correo de confirmación al cliente: ' . $th->getMessage());
     }
   }
 

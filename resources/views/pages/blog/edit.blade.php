@@ -28,6 +28,23 @@
                                 </div>
                             </div>
 
+                            <!-- URL Amigable (Slug) -->
+                            <div class="md:col-span-5">
+                                <label for="slug" class="block font-medium text-gray-700 dark:text-gray-300">
+                                    URL Amigable (Slug) <span class="text-xs text-gray-400 font-normal">(Personaliza la ruta URL de este post)</span>
+                                </label>
+                                <div class="relative mb-2 mt-1">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                                        <i class="fa-solid fa-link"></i>
+                                    </div>
+                                    <input type="text" id="slug" name="slug"
+                                        value="{{ old('slug', $blog->slug) }}"
+                                        class="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                        placeholder="ejemplo-mi-articulo-de-blog">
+                                </div>
+                                <p class="text-xs text-gray-500 mb-2">Enlace actual: <a href="{{ route('detalleBlog', $blog->slug) }}" target="_blank" class="text-blue-600 hover:underline font-semibold">{{ url('/post/' . $blog->slug) }}</a></p>
+                            </div>
+
 
 
                             <div class="md:col-span-5">
@@ -83,6 +100,74 @@
                                 <div class="relative mb-2 mt-2">
                                     <div id="description-editor" class="w-full min-h-[200px]"></div>
                                     <input type="hidden" name="descripcion" id="descripcion">
+                                </div>
+                            </div>
+
+                            <!-- Sección SEO Técnico -->
+                            <div class="md:col-span-5 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <i class="fa-solid fa-chart-line text-blue-600"></i>
+                                    <h3 class="font-semibold text-slate-800 dark:text-slate-100 text-base">
+                                        Optimización SEO (Metadatos del Post)
+                                    </h3>
+                                </div>
+
+                                <!-- Meta Title -->
+                                <div class="mb-3">
+                                    <label for="meta_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Meta Título (SEO Title)
+                                    </label>
+                                    <div class="relative mt-1">
+                                        <input type="text" id="meta_title" name="meta_title" value="{{ old('meta_title', $blog->meta_title) }}"
+                                            maxlength="255"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="Ej: Guía de Instalación de Antenas ISP | DarTelecom Blog">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Recomendado: 50 a 60 caracteres.</p>
+                                </div>
+
+                                <!-- Meta Description -->
+                                <div class="mb-3">
+                                    <label for="meta_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Meta Descripción (Snippet de Google)
+                                    </label>
+                                    <div class="relative mt-1">
+                                        <textarea id="meta_description" name="meta_description" rows="3"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="Breve resumen informativo y atractivo del artículo para captar clics en Google...">{{ old('meta_description', $blog->meta_description) }}</textarea>
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Recomendado: 120 a 160 caracteres.</p>
+                                </div>
+
+                                <!-- Meta Keywords -->
+                                <div class="mb-3">
+                                    <label for="meta_keywords" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Palabras Clave (Keywords separadas por comas)
+                                    </label>
+                                    <div class="relative mt-1">
+                                        <input type="text" id="meta_keywords" name="meta_keywords" value="{{ old('meta_keywords', $blog->meta_keywords) }}"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                            placeholder="telecomunicaciones, wisp, antenas, configuracion de red">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Términos relevantes separados por comas.</p>
+                                </div>
+
+                                <!-- Meta Image (OpenGraph / Redes Sociales) -->
+                                <div class="mb-3">
+                                    <label for="meta_image" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Imagen para Compartir (OpenGraph / Redes Sociales)
+                                    </label>
+                                    @if($blog->meta_image)
+                                        <div class="mb-2 mt-1">
+                                            <img src="{{ asset($blog->meta_image) }}" alt="SEO Image Actual" class="w-32 h-20 object-cover rounded-md border">
+                                            <p class="text-xs text-gray-500 mt-1">Imagen actual</p>
+                                        </div>
+                                    @endif
+                                    <div class="relative mt-1">
+                                        <input type="file" id="meta_image" name="meta_image" accept="image/*"
+                                            class="p-2.5 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                    <p class="mt-1 text-xs text-gray-500">Recomendado: 1200x630px en formato JPG/PNG para WhatsApp y redes.</p>
                                 </div>
                             </div>
 

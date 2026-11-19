@@ -1,6 +1,67 @@
-@extends('components.public.matrix', ['pagina' => $producto?->producto])
+@extends('components.public.matrix', ['pagina' => $producto->meta_title ?: $producto->producto])
 
-@section('titulo', 'Producto')
+@section('titulo', $producto->meta_title ?: $producto->producto)
+@section('meta_title', $producto->meta_title ?: ($producto->producto . ' | DarTelecom'))
+@section('meta_description', $producto->meta_description ?: Str::limit(strip_tags($producto->description ?? $producto->extract ?? 'Adquiere ' . $producto->producto . ' con soporte y garantía en DarTelecom Perú.'), 155))
+@if(!empty($producto->meta_keywords))
+@section('meta_keywords', $producto->meta_keywords)
+@endif
+
+@push('structured_data')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Product",
+  "name": "{{ addslashes($producto->producto) }}",
+  "image": [
+    "{{ asset($producto->imagen) }}"
+  ],
+  "description": "{{ addslashes(Str::limit(strip_tags($producto->description ?? $producto->extract ?? $producto->producto), 250)) }}",
+  "sku": "{{ $producto->sku ?? ('DT-' . $producto->id) }}",
+  "brand": {
+    "@type": "Brand",
+    "name": "{{ $producto->brand?->nombre ?? 'DarTelecom' }}"
+  },
+  "offers": {
+    "@type": "Offer",
+    "url": "{{ route('producto', $producto->slug) }}",
+    "priceCurrency": "PEN",
+    "price": "{{ ($producto->precio_oferta && $producto->precio_oferta > 0) ? $producto->precio_oferta : ($producto->precio ?? '0.00') }}",
+    "availability": "https://schema.org/{{ ($producto->stock && $producto->stock > 0) ? 'InStock' : 'PreOrder' }}",
+    "seller": {
+      "@type": "Organization",
+      "name": "DarTelecom"
+    }
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": "{{ url('/') }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Catálogo",
+      "item": "{{ route('catalogo') }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ addslashes($producto->producto) }}",
+      "item": "{{ route('producto', $producto->slug) }}"
+    }
+  ]
+}
+</script>
+@endpush
 
 @section('css_importados')
 
@@ -167,18 +228,20 @@
                 <div class="w-full md:w-1/2">
                     <div class="bg-colorBackgroundAzulClaro p-6 overflow-hidden rounded-xl">
                         <img id="mainImage" class="w-full overflow-hidden  aspect-square object-contain !rounded-xl "
-                            src="{{ asset($producto?->imagen) }}" alt="{{ $producto?->producto }}">
+                            src="{{ asset($producto?->imagen) }}" alt="{{ $producto?->producto }}" fetchpriority="high" decoding="async">
                     </div>
                     <div class="grid grid-cols-4 lg:grid-cols-5 mt-4 gap-4">
                         <div class="bg-colorBackgroundAzulClaro p-2 rounded-xl">
                             <img class="w-full    object-contain rounded-lg cursor-pointer aspect-square"
                                 src="{{ asset($producto?->imagen) }}" alt="{{ $producto?->producto }}"
+                                loading="lazy" decoding="async"
                                 onclick="changeImage(this)">
                         </div>
                         @foreach ($album->images as $image)
                             <div class="bg-colorBackgroundAzulClaro p-2 rounded-xl aspect-square">
                                 <img class="w-full  object-contain rounded-lg cursor-pointer aspect-square"
                                     src="{{ asset($image->url_image) }}" alt="{{ $image->name_image }}"
+                                    loading="lazy" decoding="async"
                                     onclick="changeImage(this)">
                             </div>
                         @endforeach
@@ -391,6 +454,7 @@
                                 <a href="{{ route('producto', $producto?->slug) }}">
                                     <div class="mb-4 w-full h-[212px] bg-white rounded-xl">
                                         <img src="{{ asset($producto?->imagen) }}" alt="{{ $producto?->producto }}"
+                                            loading="lazy" decoding="async"
                                             class=" w-full h-full object-contain">
                                     </div>
                                     <h3 class="text-text28 font-semibold mb-2 text-colorAzulOscuro">

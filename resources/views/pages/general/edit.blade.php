@@ -1,6 +1,6 @@
 <x-app-layout title="Editar General">
     <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-        <form action="{{ route('datosgenerales.update', $general->id) }}" method="POST">
+        <form action="{{ route('datosgenerales.update', $general->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div
@@ -324,6 +324,72 @@
 
 
 
+                                                    <!-- SECCIÓN METADATOS SEO PARA LA PÁGINA DE INICIO (HOME) -->
+                                                    <div class="md:col-span-5 border-t border-b border-gray-200 dark:border-gray-700 py-6 my-4">
+                                                        <div class="flex items-center gap-2 mb-4">
+                                                            <i class="fa-solid fa-globe text-blue-600 text-xl"></i>
+                                                            <div>
+                                                                <h2 class="text-lg font-bold text-slate-800 dark:text-white">
+                                                                    Optimización SEO de la Página de Inicio (Home)
+                                                                </h2>
+                                                                <p class="text-xs text-gray-500">Configura cómo aparece la página principal de DarTelecom en los resultados de Google y al compartir en redes sociales.</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="grid gap-4 grid-cols-1 md:grid-cols-5">
+                                                            <div class="md:col-span-5">
+                                                                <label for="meta_title" class="block font-medium text-gray-700 dark:text-gray-300">Meta Título (Home SEO Title)</label>
+                                                                <div class="relative mt-1">
+                                                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                                        <i class="fa-regular fa-pen-to-square"></i>
+                                                                    </div>
+                                                                    <input type="text" id="meta_title" name="meta_title" value="{{ $general->meta_title }}"
+                                                                        class="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                                        placeholder="Ej: DarTelecom | Equipos de Red y Soluciones de Telecomunicaciones en Perú">
+                                                                </div>
+                                                                <p class="mt-1 text-xs text-gray-500">Recomendado: 50 a 60 caracteres.</p>
+                                                            </div>
+
+                                                            <div class="md:col-span-5">
+                                                                <label for="meta_description" class="block font-medium text-gray-700 dark:text-gray-300">Meta Descripción (Snippet de Google)</label>
+                                                                <div class="relative mt-1">
+                                                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none top-3">
+                                                                        <i class="fa-regular fa-pen-to-square"></i>
+                                                                    </div>
+                                                                    <textarea id="meta_description" name="meta_description" rows="3"
+                                                                        class="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                                        placeholder="Breve resumen persuasivo de DarTelecom para captar clics en Google...">{{ $general->meta_description }}</textarea>
+                                                                </div>
+                                                                <p class="mt-1 text-xs text-gray-500">Recomendado: 120 a 160 caracteres.</p>
+                                                            </div>
+
+                                                            <div class="md:col-span-5">
+                                                                <label for="meta_keywords" class="block font-medium text-gray-700 dark:text-gray-300">Palabras Clave (Separadas por comas)</label>
+                                                                <div class="relative mt-1">
+                                                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                                        <i class="fa-solid fa-key"></i>
+                                                                    </div>
+                                                                    <input type="text" id="meta_keywords" name="meta_keywords" value="{{ $general->meta_keywords }}"
+                                                                        class="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                                                        placeholder="telecomunicaciones peru, fibra optica, antenas isp, radioenlaces, routers">
+                                                                </div>
+                                                            </div>
+
+                                                            <div class="md:col-span-5">
+                                                                <label for="meta_image" class="block font-medium text-gray-700 dark:text-gray-300">Imagen Principal para Redes Sociales (OpenGraph / WhatsApp)</label>
+                                                                @if($general->meta_image)
+                                                                    <div class="mb-2 mt-2">
+                                                                        <img src="{{ asset($general->meta_image) }}" alt="Preview SEO Home" class="w-48 h-28 object-cover rounded-lg border shadow-sm">
+                                                                        <p class="text-xs text-gray-500 mt-1">Imagen actual configurada</p>
+                                                                    </div>
+                                                                @endif
+                                                                <input type="file" id="meta_image" name="meta_image" accept="image/*"
+                                                                    class="mt-1 p-2.5 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600">
+                                                                <p class="mt-1 text-xs text-gray-500">Recomendado: 1200 x 630 px en JPG o PNG.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
                                                     <div class="md:col-span-5 text-right mt-6">
                                                         <div class="inline-flex items-end">
                                                             <button type="submit" id="form_general"
@@ -349,6 +415,70 @@
                 </div>
             </div>
         </form>
+
+        {{-- SECCIÓN DE HERRAMIENTAS SEO TÉCNICAS: SITEMAP & ROBOTS.TXT --}}
+        <div class="col-span-full xl:col-span-8 bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700 mt-8">
+            <header class="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-screwdriver-wrench text-blue-600 text-xl"></i>
+                    <h2 class="font-semibold text-slate-800 dark:text-slate-100 text-xl tracking-tight">
+                        Herramientas SEO Técnicas: Sitemap.xml & Robots.txt
+                    </h2>
+                </div>
+            </header>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Tarjeta 1: Regenerar Sitemap -->
+                <div class="p-5 border border-gray-200 dark:border-gray-700 rounded-xl bg-slate-50 dark:bg-slate-900 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-sitemap text-indigo-600 text-lg"></i>
+                            <h3 class="font-bold text-slate-800 dark:text-white text-base">Mapa del Sitio (Sitemap.xml)</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                            Genera o actualiza el archivo físico en el servidor con todos los productos, servicios y artículos de blog activos para los motores de búsqueda.
+                        </p>
+                        <div class="text-xs bg-white dark:bg-slate-800 p-2.5 rounded border border-gray-200 dark:border-gray-700 mb-4 text-gray-600 dark:text-gray-400">
+                            <strong>URL Pública:</strong> <a href="{{ url('/sitemap.xml') }}" target="_blank" class="text-blue-600 underline">{{ url('/sitemap.xml') }}</a>
+                        </div>
+                    </div>
+
+                    <form action="{{ route('seo.sitemap.regenerate') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition duration-150">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            Regenerar Sitemap Ahora
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tarjeta 2: Editar Robots.txt -->
+                <div class="p-5 border border-gray-200 dark:border-gray-700 rounded-xl bg-slate-50 dark:bg-slate-900 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fa-solid fa-shield-halved text-emerald-600 text-lg"></i>
+                            <h3 class="font-bold text-slate-800 dark:text-white text-base">Archivo Robots.txt</h3>
+                        </div>
+                        <p class="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                            Controla qué páginas pueden rastrear los robots de Google y bloquea rutas privadas o sensibles.
+                        </p>
+                    </div>
+
+                    @php
+                        $robotsContent = file_exists(public_path('robots.txt')) ? file_get_contents(public_path('robots.txt')) : "User-agent: *\nAllow: /\nDisallow: /admin/\nSitemap: " . url('/sitemap.xml');
+                    @endphp
+
+                    <form action="{{ route('seo.robots.update') }}" method="POST">
+                        @csrf
+                        <textarea name="robots_content" rows="6" class="w-full font-mono text-xs p-3 bg-white dark:bg-slate-800 border border-gray-300 dark:border-gray-700 rounded-lg text-slate-800 dark:text-slate-200 mb-3 focus:ring-blue-500 focus:border-blue-500">{{ $robotsContent }}</textarea>
+                        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition duration-150">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Guardar Cambios en Robots.txt
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
     </div>
 

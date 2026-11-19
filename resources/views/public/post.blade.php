@@ -1,5 +1,73 @@
- @extends('components.public.matrix', ['pagina' => 'blog'])
- @section('titulo', $post->titulo)
+@extends('components.public.matrix', ['pagina' => $post->meta_title ?: $post->titulo])
+@section('titulo', $post->meta_title ?: $post->titulo)
+@section('meta_title', $post->meta_title ?: ($post->titulo . ' | DarTelecom Blog'))
+@section('meta_description', $post->meta_description ?: Str::limit(strip_tags($post->extracto ?? $post->descripcion ?? 'Lee nuestro artículo sobre ' . $post->titulo . ' en DarTelecom.'), 155))
+@if(!empty($post->meta_keywords))
+@section('meta_keywords', $post->meta_keywords)
+@endif
+@if(!empty($post->meta_image))
+@section('og_image', asset($post->meta_image))
+@elseif(!empty($post->imagen))
+@section('og_image', asset($post->imagen))
+@endif
+
+@push('structured_data')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ addslashes($post->titulo) }}",
+  "image": [
+    "{{ asset($post->imagen) }}"
+  ],
+  "datePublished": "{{ \Carbon\Carbon::parse($post->fecha_publicacion ?? $post->created_at)->toIso8601String() }}",
+  "dateModified": "{{ \Carbon\Carbon::parse($post->updated_at ?? $post->fecha_publicacion)->toIso8601String() }}",
+  "author": {
+    "@type": "Organization",
+    "name": "DarTelecom"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "DarTelecom",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ asset('images/img/logo.png') }}"
+    }
+  },
+  "description": "{{ addslashes(Str::limit(strip_tags($post->extracto ?? $post->descripcion ?? $post->titulo), 200)) }}",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ route('detalleBlog', $post->slug) }}"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Inicio",
+      "item": "{{ url('/') }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "{{ route('blog') }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ addslashes($post->titulo) }}",
+      "item": "{{ route('detalleBlog', $post->slug) }}"
+    }
+  ]
+}
+</script>
+@endpush
 
  @section('css_importados')
 
@@ -13,13 +81,13 @@
          <section class="pt-32 w-11/12 lg:max-w-7xl mx-auto">
              <div class="flex flex-col text-center items-center max-w-6xl mx-auto">
                  <div class="flex gap-4">
-                     <h3 class="font-bold text-colorRojo text-text12 md:text-text16"> {{ $post->category->nombre }} </h3>
+                     <span class="font-bold text-colorRojo text-text12 md:text-text16"> {{ $post->category->nombre }} </span>
                      <span class="font-bold text-colorRojo text-text12 md:text-text16">|</span>
-                     <h3 class="font-bold text-colorRojo text-text16 ">Publicado
-                         {{ \Carbon\Carbon::parse($post->fecha_publicacion)->translatedFormat('d F, Y') }}</h3>
+                     <span class="font-bold text-colorRojo text-text16 ">Publicado
+                         {{ \Carbon\Carbon::parse($post->fecha_publicacion)->translatedFormat('d F, Y') }}</span>
                  </div>
-                 <h2 class=" text-colorAzulOscuro text-text32 lg:text-text48 font-bold">{{ $post->titulo }}
-                 </h2>
+                 <h1 class=" text-colorAzulOscuro text-text32 lg:text-text48 font-bold">{{ $post->titulo }}
+                 </h1>
              </div>
          </section>
 
@@ -30,6 +98,7 @@
              @if ($post->imagen)
                 <div class="w-full" data-aos="fade-up" data-aos-offset="150">
                     <img src="{{ asset($post->imagen) }}" alt="{{ $post->titulo }}"
+                        loading="lazy" decoding="async"
                         class="w-full aspect-[16/10] object-cover rounded-xl" />
                 </div>
             @endif

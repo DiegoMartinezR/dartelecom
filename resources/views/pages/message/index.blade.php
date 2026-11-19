@@ -15,6 +15,7 @@
                         <thead>
                             <tr>
                                 <th>Nombre</th>
+                                <th>Empresa</th>
                                 <th>Correo</th>
                                 <th>Teléfono</th>
                                 <th>IP</th>
@@ -42,6 +43,7 @@
                                         @endif
 
                                     </td>
+                                    <td>{{ $item->company ?? '-' }}</td>
                                     <td>{{ $item->email }}</td>
                                     <td>{{ $item->phone }}</td>
 

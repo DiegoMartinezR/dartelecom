@@ -66,17 +66,19 @@ class BlogController extends Controller
       //'categoria_id' => 'required|exists:categories,id',
       'category_post_id' => 'required|exists:category_posts,id',
       'destacado' => 'nullable|boolean',
-
+      'meta_title' => 'nullable|string|max:255',
+      'meta_description' => 'nullable|string',
+      'meta_keywords' => 'nullable|string|max:255',
     ]);
 
     $data = $request->all();
-    $originalSlug = Str::slug($request->titulo);
-    $slug = $originalSlug;
+    $baseSlug = $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->titulo);
+    $slug = $baseSlug;
     $count = 1;
 
     // Generar un slug único si ya existe
     while (Blog::where('slug', $slug)->exists()) {
-        $slug = $originalSlug . '-' . $count;
+        $slug = $baseSlug . '-' . $count;
         $count++;
     }
     
@@ -129,6 +131,18 @@ class BlogController extends Controller
       $blog->destacado = $request->has('destacado');
       $blog->imagen = $data['imagen'] ?? null;
       $blog->slug = $data['slug'] ?? null;
+      $blog->meta_title = $request->meta_title;
+      $blog->meta_description = $request->meta_description;
+      $blog->meta_keywords = $request->meta_keywords;
+
+      // Manejo de la imagen de metadatos SEO
+      if ($request->hasFile("meta_image")) {
+        $file = $request->file('meta_image');
+        $nombreMetaImg = Str::random(10) . '_' . $file->getClientOriginalName();
+        $file->move($pathSubFolder, $nombreMetaImg);
+        $blog->meta_image = 'storage/images/albums/' . $mainFolder . '/' . $subFolder . '/' . $nombreMetaImg;
+      }
+
       $blog->fecha_publicacion = date('Y-m-d');
       if ($request->has('destacado')) {
         $blog->fecha_descatado = date('Y-m-d');
@@ -207,15 +221,17 @@ class BlogController extends Controller
       //'categoria_id' => 'required|exists:categories,id',
       'category_post_id' => 'required|exists:category_posts,id',
       'destacado' => 'nullable|boolean',
-
+      'meta_title' => 'nullable|string|max:255',
+      'meta_description' => 'nullable|string',
+      'meta_keywords' => 'nullable|string|max:255',
     ]);
-    $originalSlug = Str::slug($request->titulo);
-    $newTitle = $originalSlug;
+    $baseSlug = $request->filled('slug') ? Str::slug($request->slug) : Str::slug($request->titulo);
+    $newTitle = $baseSlug;
     $count = 1;
 
     // Generar un slug único si el slug ya le pertenece a otro post
     while (Blog::where('slug', $newTitle)->where('id', '!=', $blog->id)->exists()) {
-        $newTitle = $originalSlug . '-' . $count;
+        $newTitle = $baseSlug . '-' . $count;
         $count++;
     }
 
@@ -265,6 +281,18 @@ class BlogController extends Controller
         $data['imagen'] = "storage/images/albums/{$mainFolder}/{$subFolder}/{$nombreImagen}";
       }
 
+      // Manejo de imagen SEO
+      if ($request->hasFile("meta_image")) {
+        if ($blog->meta_image && file_exists(public_path($blog->meta_image))) {
+          unlink(public_path($blog->meta_image));
+        }
+
+        $file = $request->file('meta_image');
+        $nombreMetaImg = Str::random(10) . '_' . $file->getClientOriginalName();
+        $file->move($pathSubFolder, $nombreMetaImg);
+        $data['meta_image'] = "storage/images/albums/{$mainFolder}/{$subFolder}/{$nombreMetaImg}";
+      }
+
       // **Paso 5: Actualizar el Blog en la base de datos**
       $blog->update([
         'titulo' => $request->titulo,
@@ -272,7 +300,11 @@ class BlogController extends Controller
         'descripcion' => $request->descripcion,
         'destacado' => $request->has('destacado'),
         'imagen' => $data['imagen'] ?? $blog->imagen,
+        'meta_image' => $data['meta_image'] ?? $blog->meta_image,
         'slug' => $newTitle,
+        'meta_title' => $request->meta_title,
+        'meta_description' => $request->meta_description,
+        'meta_keywords' => $request->meta_keywords,
         'fecha_publicacion' => $blog->fecha_publicacion,
         'fecha_descatado' => $request->has('destacado') ? date('Y-m-d') : $blog->fecha_descatado,
         'category_post_id' => $request->category_post_id
