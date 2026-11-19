@@ -76,7 +76,7 @@ class IndexController extends Controller
     // Obtener datos con manejo de casos donde no haya resultados
     $home = HomeView::first() ?? null; // Si no hay datos, devuelve null
     $productos = Products::latest()->take(6)->get(); // Colección vacía si no hay productos
-    $general = General::all(); // Colección vacía si no hay datos generales
+    $general = General::first(); // Registro de datos generales (única instancia)
     $servicios = Service::latest()->take(4)->get(); // Colección vacía si no hay servicios
 
     // Obtener el blog más reciente
@@ -111,7 +111,7 @@ class IndexController extends Controller
     // Verificar si todos los datos están vacíos
     $allEmpty = empty($home) &&
       $productos->isEmpty() &&
-      $general->isEmpty() &&
+      empty($general) &&
       $servicios->isEmpty() &&
       empty($mostRecentPost) &&
       $nextTwoRecentPosts->isEmpty() &&
@@ -271,7 +271,7 @@ class IndexController extends Controller
   {
 
     // Obtener datos generales
-    $general = General::all();
+    $general = General::first();
     $textoproducto = ProductosView::first();
     $home = HomeView::first();
     $brands = Brand::all();

@@ -1,3 +1,6 @@
+@php
+    $general = $general instanceof \Illuminate\Support\Collection ? $general->first() : $general;
+@endphp
 @extends('components.public.matrix', ['pagina' => $general?->meta_title ?: 'Inicio'])
 
 @section('titulo', 'Inicio')
