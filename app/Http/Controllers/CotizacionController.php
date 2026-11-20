@@ -91,16 +91,18 @@ class CotizacionController extends Controller
     private function envioCorreoAdmin($data)
     {
         $generales = General::first();
+        $destinatarios = $generales ? $generales->getNotificationEmails() : ['ventas@dartelecom.pe'];
         // $name = $data['full_name'];
         $name = 'Administrador';
         $mensaje = 'tienes un nuevo suscriptor - HPI';
         $mail = EmailConfig::config($name, $mensaje);
-        $emailadmin = 'diego.martinez.r@tecsup.edu.pe';
         $baseUrl = 'https://' . $_SERVER['HTTP_HOST'] . '/mail';
         $baseUrllink = 'https://' . $_SERVER['HTTP_HOST'] . '/';
 
         try {
-            $mail->addAddress($emailadmin);
+            foreach ($destinatarios as $destinatario) {
+                $mail->addAddress($destinatario);
+            }
             $mail->Body =
                 '
           <html lang="en">

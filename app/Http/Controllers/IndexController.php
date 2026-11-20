@@ -210,14 +210,25 @@ class IndexController extends Controller
   public function showServicios($slug)
   {
     $general = General::first();
-    $subservicio = SubService::where('slug', $slug)->firstOrFail();
+    $subservicio = SubService::where('slug', $slug)->first();
+    if (!$subservicio && is_numeric($slug)) {
+      $subservicio = SubService::find($slug);
+    }
+
+    if (!$subservicio) {
+      return response('<div class="p-8 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200"><i class="fa-solid fa-circle-info text-2xl text-amber-500 mb-2"></i><p class="font-medium">El subservicio solicitado no se encuentra disponible.</p></div>', 200);
+    }
+
     // Extraer solo el nombre del subservicio desde la ruta en "album"
     $albumName = $subservicio->slug;
 
-    // Buscar el álbum en la base de datos
-    $album = Album::where('name', $albumName)->withCount('images', 'children')->first();
-    if ($album) {
-      $album->load('children', 'images');
+    // Buscar el álbum en la base de datos de forma segura
+    $album = null;
+    if (!empty($albumName)) {
+      $album = Album::where('name', $albumName)->withCount('images', 'children')->first();
+      if ($album) {
+        $album->load('children', 'images');
+      }
     }
 
     // Pasamos el subservicio como servicio para mantener compatibilidad con el componente
@@ -1373,7 +1384,7 @@ class IndexController extends Controller
   private function envioCorreoAdmin($data)
   {
     $generales = General::first();
-    $emailadmin = ($generales && !empty($generales->email)) ? $generales->email : 'ventas@dartelecom.pe';
+    $destinatarios = $generales ? $generales->getNotificationEmails() : ['ventas@dartelecom.pe'];
     $appUrl = env('APP_URL', url('/'));
 
     $clientName = is_array($data) ? ($data['full_name'] ?? 'Cliente') : ($data->full_name ?? 'Cliente');
@@ -1382,7 +1393,12 @@ class IndexController extends Controller
 
     try {
       $mail = EmailConfig::config("DarTelecom", "Nueva Solicitud de {$subjectName}");
-      $mail->addAddress($emailadmin);
+      
+      // Agregar todos los correos destinatarios configurados
+      foreach ($destinatarios as $destinatario) {
+        $mail->addAddress($destinatario);
+      }
+
       $mail->isHTML(true);
       $mail->Body = view('mail.contact_admin', [
         'data' => is_array($data) ? $data : $data->toArray(),

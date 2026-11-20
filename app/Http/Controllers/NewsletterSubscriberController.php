@@ -188,7 +188,7 @@ class NewsletterSubscriberController extends Controller
   private function envioCorreoAdmin($data)
   {
     $generales = General::first();
-    $emailadmin = $generales->email;
+    $destinatarios = $generales ? $generales->getNotificationEmails() : ['ventas@dartelecom.pe'];
     $appUrl = env('APP_URL');
     $name = 'Administrador';
     $mensaje = "Nueva suscriptor - Dar Telecom";
@@ -199,7 +199,9 @@ class NewsletterSubscriberController extends Controller
 
 
     try {
-      $mail->addAddress($emailadmin);
+      foreach ($destinatarios as $destinatario) {
+        $mail->addAddress($destinatario);
+      }
       $mail->Body =
         '<html lang="en">
                 <head>

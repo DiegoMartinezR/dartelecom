@@ -34,7 +34,7 @@
     "@type": "Country",
     "name": "Perú"
   },
-  "url": "{{ route('servicios', $servicioActual->slug) }}"
+  "url": "{{ !empty($servicioActual->slug) ? route('servicios', $servicioActual->slug) : route('servicios') }}"
 }
 </script>
 <script type="application/ld+json">
@@ -53,13 +53,15 @@
       "position": 2,
       "name": "Servicios",
       "item": "{{ route('servicios') }}"
-    },
-    {
+    }
+    @if(!empty($servicioActual->slug))
+    ,{
       "@type": "ListItem",
       "position": 3,
       "name": "{{ addslashes($tituloLimpio) }}",
       "item": "{{ route('servicios', $servicioActual->slug) }}"
     }
+    @endif
   ]
 }
 </script>
@@ -571,15 +573,21 @@
                         <ul class="hidden lg:grid grid-cols-1 gap-4" data-aos="fade-up" data-aos-offset="150"
                             data-aos-duration="1000" data-aos-delay="200">
                             @foreach ($servicios as $index => $servicioItem)
-                                <li data-slug="{{ $servicioItem->slug }}"
-                                    class="cursor-pointer group rounded-xl flex items-center gap-4 p-4 text-text20 font-semibold bg-colorBackgroundAzulClaro hover:bg-colorBackgroundRed text-colorAzulOscuro hover:text-white transition-all duration-300 {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? 'active' : ($index === 0 && !isset($servicioSeleccionado) ? 'active' : '') }}">
-                                    <div class="group-hover:hidden h-7 w-7 bg-black {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? 'hidden' : '' }}"
-                                        style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
-                                    </div>
-                                    <div class="hidden group-hover:inline-block h-7 w-7 bg-white {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? '!inline-block' : '' }}"
-                                        style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
-                                    </div>
-                                    <a href="#" class="servicio-link">{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title)) }}</a>
+                                <li data-slug="{{ $servicioItem->slug ?? $servicioItem->id }}"
+                                    class="cursor-pointer group rounded-xl flex items-center gap-4 p-4 text-text20 font-semibold bg-colorBackgroundAzulClaro hover:bg-colorBackgroundRed text-colorAzulOscuro hover:text-white transition-all duration-300 {{ (isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug) ? 'active' : ($index === 0 && !isset($servicioSeleccionado) ? 'active' : '') }}">
+                                    @if(!empty($servicioItem->icono))
+                                        <div class="group-hover:hidden h-7 w-7 bg-black {{ (isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug) ? 'hidden' : '' }}"
+                                            style="mask-image: url('{{ asset($servicioItem->icono) }}'); -webkit-mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
+                                        </div>
+                                        <div class="hidden group-hover:inline-block h-7 w-7 bg-white {{ (isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug) ? '!inline-block' : '' }}"
+                                            style="mask-image: url('{{ asset($servicioItem->icono) }}'); -webkit-mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
+                                        </div>
+                                    @else
+                                        <div class="h-7 w-7 rounded-md bg-slate-300/70 group-hover:bg-white/20 flex items-center justify-center text-xs">
+                                            <i class="fa-solid fa-layer-group"></i>
+                                        </div>
+                                    @endif
+                                    <a href="#" class="servicio-link">{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title ?: ('Subservicio ' . ($index + 1)))) }}</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -590,16 +598,22 @@
                                 <div class="swiper-wrapper" style="border: none !important; outline: none !important; box-shadow: none !important;">
                                     @foreach ($servicios as $index => $servicioItem)
                                         <div class="swiper-slide" style="border: none !important; outline: none !important; box-shadow: none !important;">
-                                            <li data-slug="{{ $servicioItem->slug }}"
-                                                class="cursor-pointer group rounded-xl flex items-center gap-3 p-3 text-text16 font-semibold bg-colorBackgroundAzulClaro hover:bg-colorBackgroundRed text-colorAzulOscuro hover:text-white transition-all duration-300 {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? 'active' : ($index === 0 && !isset($servicioSeleccionado) ? 'active' : '') }}"
+                                            <li data-slug="{{ $servicioItem->slug ?? $servicioItem->id }}"
+                                                class="cursor-pointer group rounded-xl flex items-center gap-3 p-3 text-text16 font-semibold bg-colorBackgroundAzulClaro hover:bg-colorBackgroundRed text-colorAzulOscuro hover:text-white transition-all duration-300 {{ (isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug) ? 'active' : ($index === 0 && !isset($servicioSeleccionado) ? 'active' : '') }}"
                                                 style="border: none !important; outline: none !important; box-shadow: none !important;">
-                                                <div class="group-hover:hidden min-h-6 min-w-6 bg-black {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? 'hidden' : '' }}"
-                                                    style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
-                                                </div>
-                                                <div class="hidden group-hover:inline-block h-6 w-6 bg-white {{ isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug ? '!inline-block' : '' }}"
-                                                    style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
-                                                </div>
-                                                <a href="#" class="servicio-link text-sm">{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title)) }}</a>
+                                                @if(!empty($servicioItem->icono))
+                                                    <div class="group-hover:hidden min-h-6 min-w-6 bg-black {{ (isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug) ? 'hidden' : '' }}"
+                                                        style="mask-image: url('{{ asset($servicioItem->icono) }}'); -webkit-mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
+                                                    </div>
+                                                    <div class="hidden group-hover:inline-block h-6 w-6 bg-white {{ (isset($servicioSeleccionado) && $servicioSeleccionado == $servicioItem->slug) ? '!inline-block' : '' }}"
+                                                        style="mask-image: url('{{ asset($servicioItem->icono) }}'); -webkit-mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
+                                                    </div>
+                                                @else
+                                                    <div class="h-6 w-6 rounded-md bg-slate-300/70 group-hover:bg-white/20 flex items-center justify-center text-xs">
+                                                        <i class="fa-solid fa-layer-group"></i>
+                                                    </div>
+                                                @endif
+                                                <a href="#" class="servicio-link text-sm">{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title ?: ('Subservicio ' . ($index + 1)))) }}</a>
                                             </li>
                                         </div>
                                     @endforeach
@@ -616,7 +630,12 @@
                 <main class="lg:w-3/4 max-w-full bg-white mb-16" id="main-content">
                     <!-- El contenido del primer subservicio se mostrará por defecto -->
                     @if($servicio)
-                        @include('components.custom.component-servicio', $servicio)
+                        @include('components.custom.component-servicio', ['servicio' => $servicio, 'general' => $general, 'album' => $album])
+                    @else
+                        <div class="bg-gray-50 border border-slate-200 rounded-xl p-8 text-center text-gray-500">
+                            <i class="fa-solid fa-circle-info text-3xl mb-3 text-gray-400"></i>
+                            <p class="font-medium">Selecciona un subservicio para ver sus detalles.</p>
+                        </div>
                     @endif
                 </main>
             </div>

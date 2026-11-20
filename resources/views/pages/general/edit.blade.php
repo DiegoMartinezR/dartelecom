@@ -135,7 +135,7 @@
                                                     </div> --}}
 
                                                     <div class="md:col-span-2">
-                                                        <label for="email">Correo electrónico</label>
+                                                        <label for="email">Correo electrónico principal</label>
                                                         <div class="relative mb-2">
                                                             <div
                                                                 class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -145,6 +145,36 @@
                                                                 value="{{ $general->email }}"
                                                                 class="mt-1 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                                                 placeholder="name@flowbite.com">
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- CAMPO DE CORREOS PARA NOTIFICACIONES AL ADMINISTRADOR -->
+                                                    <div class="md:col-span-5 bg-blue-50/70 dark:bg-slate-700/50 border border-blue-200 dark:border-slate-600 rounded-xl p-4 my-2">
+                                                        <div class="flex items-center gap-2 mb-2">
+                                                            <i class="fa-solid fa-envelope-circle-check text-blue-600 text-lg"></i>
+                                                            <div>
+                                                                <label for="form_email" class="block font-bold text-slate-800 dark:text-white text-sm">
+                                                                    Correos para Notificación al Administrador (Mensajes de Contacto y Web)
+                                                                </label>
+                                                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                                                    Correos que recibirán una alerta cada vez que un cliente registre un mensaje desde el formulario web o inicie contacto por WhatsApp.
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="relative mt-2">
+                                                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                                                <i class="fa-solid fa-users text-gray-400"></i>
+                                                            </div>
+                                                            <input type="text" id="form_email" name="form_email"
+                                                                value="{{ $general->form_email }}"
+                                                                class="mt-1 bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                                placeholder="correo1@dartelecom.pe, correo2@dartelecom.pe, gerencia@dartelecom.pe">
+                                                        </div>
+                                                        <div class="flex items-start gap-1.5 mt-2 text-xs text-gray-600 dark:text-gray-300">
+                                                            <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
+                                                            <span>
+                                                                Puedes ingresar <strong>múltiples correos separados por comas ( , ) o punto y coma ( ; )</strong>. Si dejas este campo vacío, las notificaciones se enviarán únicamente al correo principal (<strong>{{ $general->email ?: 'ventas@dartelecom.pe' }}</strong>).
+                                                            </span>
                                                         </div>
                                                     </div>
 

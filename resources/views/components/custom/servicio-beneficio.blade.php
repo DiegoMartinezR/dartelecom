@@ -1,24 +1,37 @@
-<div class="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+@if(!empty($beneficios) && count($beneficios) > 0)
+<div class="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
     @foreach ($beneficios as $index => $beneficio)
         <div data-aos="fade-up" data-aos-offset="150" data-aos-duration="1000" data-aos-delay="200"
             class=" cursor-pointer bg-colorBackgroundAzulClaro p-6 text-start flex flex-col items-start rounded-xl">
-            <div class=" h-10 w-10 bg-colorBackgroundRed"
-                style="mask-image: url('{{ asset($icono) }}'); mask-size: cover; mask-repeat: no-repeat;">
+            @if(!empty($icono))
+            <div class="h-10 w-10 bg-colorBackgroundRed flex-shrink-0 mb-3"
+                style="mask-image: url('{{ asset($icono) }}'); -webkit-mask-image: url('{{ asset($icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
             </div>
+            @else
+            <div class="h-10 w-10 rounded-lg bg-red-100 text-[#ED1B2F] flex items-center justify-center flex-shrink-0 text-xl font-bold mb-3">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            @endif
             <h4 class="font-semibold mb-2 text-colorAzulOscuro text-text28">{{ $beneficio['titulo'] }}</h4>
             <p class="text-colorParrafo text-text16">{{ $beneficio['descripcion'] }}</p>
         </div>
     @endforeach
 </div>
-<div class="md:hidden w-full">
+<div class="md:hidden w-full mb-8">
     <div class="swiper beneficios-mobile-swiper">
         <div class="swiper-wrapper">
             @foreach ($beneficios as $index => $beneficio)
                 <div class="swiper-slide">
                     <div class="cursor-pointer bg-colorBackgroundAzulClaro p-4 text-start flex flex-col items-start rounded-xl w-full h-full min-h-[160px]">
+                        @if(!empty($icono))
                         <div class="h-8 w-8 bg-colorBackgroundRed mb-3 flex-shrink-0"
-                            style="mask-image: url('{{ asset($icono) }}'); mask-size: cover; mask-repeat: no-repeat;">
+                            style="mask-image: url('{{ asset($icono) }}'); -webkit-mask-image: url('{{ asset($icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
                         </div>
+                        @else
+                        <div class="h-8 w-8 rounded-lg bg-red-100 text-[#ED1B2F] mb-3 flex items-center justify-center flex-shrink-0 text-sm font-bold">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        @endif
                         <h4 class="font-semibold mb-2 text-colorAzulOscuro text-lg">{{ $beneficio['titulo'] }}</h4>
                         <p class="text-colorParrafo text-sm flex-grow">{{ $beneficio['descripcion'] }}</p>
                     </div>
@@ -28,6 +41,7 @@
         <div class="swiper-pagination mt-4"></div>
     </div>
 </div>
+@endif
 <style>
     .beneficios-mobile-swiper {
         width: 100%;

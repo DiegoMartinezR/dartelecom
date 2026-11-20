@@ -335,22 +335,24 @@
 
             <div class="w-full lg:w-1/2 overflow-x-auto md:overflow-visible scrollbar-none">
                 <div class="flex md:grid md:grid-cols-2 gap-6 min-w-max md:min-w-full">
-                    @if ($servicios)
+                    @if ($servicios && $servicios->count() > 0)
                         @foreach ($servicios->take(4) as $servicio)
                             <div class="bg-colorBackgroundAzulClaro p-6 rounded-lg shadow-md text-start w-72 flex-shrink-0 md:w-full"
                                 data-aos="fade-up" data-aos-offset="150" data-aos-duration="1000" data-aos-delay="200">
+                                @if(!empty($servicio->icono))
                                 <div class="group-hover:hidden w-12 h-12 bg-black mb-4"
-                                    style="mask-image: url('{{ asset($servicio->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
+                                    style="mask-image: url('{{ asset($servicio->icono) }}'); -webkit-mask-image: url('{{ asset($servicio->icono) }}'); mask-size: contain; mask-repeat: no-repeat;">
                                 </div>
-                                <h3 class="text-text28 font-semibold mb-2 text-colorAzulOscuro">{{ $servicio->title }}
+                                @else
+                                <div class="w-12 h-12 rounded-lg bg-red-100 text-[#ED1B2F] flex items-center justify-center text-xl mb-4 font-bold">
+                                    <i class="fa-solid fa-layer-group"></i>
+                                </div>
+                                @endif
+                                <h3 class="text-text28 font-semibold mb-2 text-colorAzulOscuro">
+                                    {{ trim(str_replace(['*', '/'], ['', ' '], $servicio->title ?: 'Servicio')) }}
                                 </h3>
-                                <!-- IGNORE 
-                                                     <p class="text-colorParrafo line-clamp-2 mb-4 text-text16">
-                                                        {{ $servicio->descripcion_breve }}
-                                                    </p>
-                                                    -->
-                                <a href="{{ route('servicios') }}"
-                                    class="bg-colorBackgroundRed hover:bg-colorBackgroundRed rounded-full text-white font-semibold px-4 py-2 inline-block">
+                                <a href="{{ !empty($servicio->slug) ? route('servicios', $servicio->slug) : route('servicios') }}"
+                                    class="bg-colorBackgroundRed hover:bg-red-700 transition-colors rounded-full text-white font-semibold px-4 py-2 inline-block">
                                     Ver más
                                 </a>
                             </div>

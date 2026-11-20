@@ -68,12 +68,14 @@
                             <div class="py-2">
                                 @if($serviciosMenu && $serviciosMenu->count() > 0)
                                     @foreach($serviciosMenu as $servicioItem)
-                                        <a href="{{ route('servicios', $servicioItem->slug) }}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-colorBackgroundRed transition-colors duration-200">
+                                        <a href="{{ !empty($servicioItem->slug) ? route('servicios', $servicioItem->slug) : route('servicios') }}" class="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 hover:text-colorBackgroundRed transition-colors duration-200">
                                             <div class="flex items-center gap-3">
-                                                @if($servicioItem->icono)
-                                                    <div class="w-5 h-5 bg-gray-600" style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;"></div>
+                                                @if(!empty($servicioItem->icono))
+                                                    <div class="w-5 h-5 bg-gray-600 flex-shrink-0" style="mask-image: url('{{ asset($servicioItem->icono) }}'); -webkit-mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;"></div>
+                                                @else
+                                                    <i class="fa-solid fa-layer-group text-gray-400 text-xs"></i>
                                                 @endif
-                                                <span class="font-medium">{{ $servicioItem->title }}</span>
+                                                <span class="font-medium">{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title ?: 'Servicio')) }}</span>
                                             </div>
                                             @if($servicioItem->descripcion_breve)
                                                 <!--p class="text-xs text-gray-500 mt-1 ml-8">{{ Str::limit($servicioItem->descripcion_breve, 60) }}</p-->
@@ -175,12 +177,12 @@
                         <div id="mobile-servicios-dropdown" class="hidden bg-colorBackgroundAzulOscuro rounded-lg mt-2 ">
                             @if($serviciosMenu && $serviciosMenu->count() > 0)
                                 @foreach($serviciosMenu as $servicioItem)
-                                    <a href="{{ route('servicios', $servicioItem->slug) }}" class="block  py-2 text-sm text-white hover:bg-colorBackgroundRed transition-colors duration-200 rounded">
+                                    <a href="{{ !empty($servicioItem->slug) ? route('servicios', $servicioItem->slug) : route('servicios') }}" class="block  py-2 text-sm text-white hover:bg-colorBackgroundRed transition-colors duration-200 rounded">
                                         <div class="flex items-center justify-center gap-2">
-                                            @if($servicioItem->icono)
-                                                <div class="w-4 h-4 bg-white" style="mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;"></div>
+                                            @if(!empty($servicioItem->icono))
+                                                <div class="w-4 h-4 bg-white flex-shrink-0" style="mask-image: url('{{ asset($servicioItem->icono) }}'); -webkit-mask-image: url('{{ asset($servicioItem->icono) }}'); mask-size: contain; mask-repeat: no-repeat;"></div>
                                             @endif
-                                            <span>{{ $servicioItem->title }}</span>
+                                            <span>{{ trim(str_replace(['*', '/'], ['', ' '], $servicioItem->title ?: 'Servicio')) }}</span>
                                         </div>
                                     </a>
                                 @endforeach

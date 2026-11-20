@@ -13,13 +13,19 @@ class ServicioBeneficio extends Component
      */
     public $beneficios;
     public $icono;
-    public function __construct($text, $icono)
+    public function __construct($text = null, $icono = null)
     {
+        $this->icono = $icono ?? '';
+        $this->beneficios = [];
+
+        $text = is_string($text) ? trim($text) : '';
+        if (empty($text)) {
+            return;
+        }
+
         // Convertir el string en un array de beneficios con títulos personalizables
         // Formato: "Título 1|Descripción 1;Título 2|Descripción 2" o "Descripción 1;Descripción 2" (títulos por defecto)
-        $this->icono = $icono;
         $items = explode(';', $text);
-        $this->beneficios = [];
         
         foreach ($items as $index => $item) {
             $item = trim($item);
