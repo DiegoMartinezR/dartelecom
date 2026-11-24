@@ -137,7 +137,6 @@ class SubServiceController extends Controller
         $service = Service::findOrFail($serviceId);
         $subservicio = SubService::where('service_id', $serviceId)->findOrFail($id);
         
-        // Asegurarse de que exista un álbum para este subservicio (crear si no existe)
         $albumName = $subservicio->slug;
 
         // Álbum contenedor principal para subservicios
@@ -146,11 +145,36 @@ class SubServiceController extends Controller
             ['description' => 'Contenedor principal para los Subservicios.']
         );
 
-        // Crear o recuperar el álbum específico del subservicio bajo el contenedor
-        $album = Album::firstOrCreate(
-            ['name' => $albumName, 'parent_id' => $parentAlbum->id],
-            ['description' => 'Álbum para el subservicio: ' . $subservicio->title]
-        );
+        // 1. Buscar si ya existe el álbum vinculado (por ID o por nombre único)
+        $album = null;
+        if (!empty($subservicio->album_id)) {
+            $album = Album::find($subservicio->album_id);
+        }
+
+        if (!$album && !empty($albumName)) {
+            $album = Album::where('name', $albumName)->first();
+        }
+
+        // 2. Si no existe ningún álbum con ese nombre, crearlo de forma segura
+        if (!$album) {
+            $album = Album::create([
+                'name' => $albumName ?: ('subservicio-' . $subservicio->id),
+                'parent_id' => $parentAlbum->id,
+                'description' => 'Álbum para el subservicio: ' . $subservicio->title
+            ]);
+        } else {
+            // Si el álbum existe pero su parent_id no estaba asignado al contenedor, actualizarlo
+            if ($album->parent_id !== $parentAlbum->id) {
+                $album->parent_id = $parentAlbum->id;
+                $album->save();
+            }
+        }
+
+        // 3. Asegurar que el subservicio tenga vinculado su album_id
+        if ($subservicio->album_id !== $album->id) {
+            $subservicio->album_id = $album->id;
+            $subservicio->save();
+        }
 
         $album->load('children', 'images');
 
@@ -180,13 +204,31 @@ class SubServiceController extends Controller
             $data = $request->all();
             $data['visible'] = $request->has('visible') ? 1 : 0;
 
+            // Obtener el álbum actual si existe
+            $album = null;
+            if (!empty($subService->album_id)) {
+                $album = Album::find($subService->album_id);
+            }
+            if (!$album && !empty($subService->slug)) {
+                $album = Album::where('name', $subService->slug)->first();
+            }
+
             // Actualizar slug si el título cambió
             if ($subService->title !== $request->title) {
                 $slug = Str::slug($request->title);
-                while (SubService::where('slug', $slug)->where('id', '!=', $subService->id)->exists()) {
+                while (
+                    SubService::where('slug', $slug)->where('id', '!=', $subService->id)->exists() ||
+                    Album::where('name', $slug)->where('id', '!=', $album?->id)->exists()
+                ) {
                     $slug = Str::slug($request->title) . '-' . uniqid();
                 }
                 $data['slug'] = $slug;
+
+                // Actualizar el nombre del álbum para mantener sincronía
+                if ($album) {
+                    $album->name = $slug;
+                    $album->save();
+                }
             }
 
             // Guardar nuevo icono si se subió
@@ -211,8 +253,9 @@ class SubServiceController extends Controller
             $subService->update($data);
 
             // Subir nuevas imágenes de la galería si existen
-            if ($request->hasFile('images') && $subService->album) {
-                $this->uploadImages($request, $subService->album);
+            $albumToUpload = $subService->album ?: $album;
+            if ($request->hasFile('images') && $albumToUpload) {
+                $this->uploadImages($request, $albumToUpload);
             }
 
             return redirect()->route('subservicios.index', $service->id)
